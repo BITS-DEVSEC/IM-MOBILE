@@ -1,7 +1,7 @@
 import { Button, ButtonProps } from "@mantine/core";
 
 type WizardButtonProps = ButtonProps & {
-  variant: "back" | "next" | "continue" | "submit";
+  variant: "back" | "next" | "continue" | "submit" | "quote";
   onClick: () => void;
 };
 
@@ -22,6 +22,11 @@ const WizardButton = ({ variant, onClick, ...props }: WizardButtonProps) => {
       color: "#7E4005",
       variant: "filled",
     },
+    quote: {
+      label: "Get Quote",
+      color: "#7E4005",
+      variant: "filled",
+    },
     submit: {
       label: "Submit Application",
       color: "#7E4005",
@@ -31,7 +36,7 @@ const WizardButton = ({ variant, onClick, ...props }: WizardButtonProps) => {
 
   return (
     <Button
-      radius="xl"
+      radius="md"
       onClick={onClick}
       variant={buttonConfig[variant].variant}
       color={buttonConfig[variant].color}

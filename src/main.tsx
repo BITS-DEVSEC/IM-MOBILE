@@ -18,7 +18,7 @@ const primaryColor: MantineColorsTuple = [
   "#e47127",
   "#c55f1e",
   "#a14d18",
-  "#7e4005", // base
+  "#7e4005",
   "#5a2d00",
 ];
 

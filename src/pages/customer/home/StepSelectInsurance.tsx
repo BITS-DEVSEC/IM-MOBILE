@@ -13,7 +13,7 @@ import {
   ScrollArea,
 } from "@mantine/core";
 import { Shield, ArrowLeft, Car, RefreshCw, ChevronDown } from "lucide-react";
-import WizardButton from "../../components/WizardButton";
+import WizardButton from "../../../components/WizardButton";
 
 type StepSelectInsuranceProps = {
   insuranceCategory: string;
@@ -90,13 +90,11 @@ export default function StepSelectInsurance({
 
       <ScrollArea style={{ flex: 1 }} px="md">
         <Title
-          order={3}
-          ta="center"
-          mb="lg"
-          style={{
-            color: "#2c3e50",
-            fontWeight: 600,
-          }}
+          order={2}
+          fw={700}
+          mb="xs"
+          c="primary.8"
+          style={{ textAlign: "center" }}
         >
           {insuranceCategory === "motor" ? "Motor" : "Property"} Insurance
           Options

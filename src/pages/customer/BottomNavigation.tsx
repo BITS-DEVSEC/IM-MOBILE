@@ -1,58 +1,78 @@
-import { Home, Car, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Home, Shield, User } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Box, Flex, Text, Paper } from "@mantine/core";
 
-interface BottomNavigationProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}
-
-const BottomNavigation = ({ activeTab }: BottomNavigationProps) => {
+const BottomNavigation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const tabs = [
-    { id: "home", icon: <Home size={24} />, path: "/insurance" },
-    { id: "motor", icon: <Car size={24} />, path: "/cars" },
-    { id: "profile", icon: <User size={24} />, path: "/profile" },
+    { id: "home", icon: Home, label: "Home", path: "/insurance" },
+    { id: "insurance", icon: Shield, label: "Policies", path: "/policies" },
+    { id: "account", icon: User, label: "Account", path: "/account" },
   ];
+
+  const activeTab =
+    tabs.find((tab) => location.pathname.startsWith(tab.path))?.id || "home";
 
   const handleTabChange = (path: string) => {
     navigate(path);
   };
 
   return (
-    <div
+    <Paper
+      radius={0}
+      withBorder
       style={{
         position: "fixed",
         bottom: 0,
-        left: 0,
-        width: "100%",
-        background: "white",
-        display: "flex",
-        justifyContent: "space-around",
-        padding: "12px 0",
-        borderTop: "1px solid #eaeaea",
-        boxShadow: "0 -2px 10px rgba(0,0,0,0.03)",
+        borderTop: "1px solid #e2e8f0",
+        backgroundColor: "white",
+        height: "64px",
         zIndex: 100,
+        width: "420px",
       }}
     >
-      {tabs.map((tab) => (
-        <div
-          key={tab.id}
-          onClick={() => handleTabChange(tab.path)}
-          style={{
-            cursor: "pointer",
-            transition: "all 0.2s",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "36px",
-            height: "36px",
-            color: activeTab === tab.id ? "#7E4005" : "#64748b",
-          }}
-        >
-          {tab.icon}
-        </div>
-      ))}
-    </div>
+      <Flex justify="space-around" align="center" h="100%">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+
+          return (
+            <Flex
+              key={tab.id}
+              direction="column"
+              align="center"
+              justify="center"
+              onClick={() => handleTabChange(tab.path)}
+              style={{
+                cursor: "pointer",
+                flex: 1,
+                padding: "0.5rem 0",
+              }}
+            >
+              <Box>
+                <Icon
+                  size={20}
+                  color={isActive ? "#7E4005" : "#64748b"}
+                  fill={isActive ? "#7E4005" : "none"}
+                />
+              </Box>
+              <Text
+                size="xs"
+                mt={4}
+                c={isActive ? "#7E4005" : "#64748b"} // Primary color for active, slate-500 for inactive
+                style={{
+                  fontWeight: isActive ? 500 : 400,
+                }}
+              >
+                {tab.label}
+              </Text>
+            </Flex>
+          );
+        })}
+      </Flex>
+    </Paper>
   );
 };
 

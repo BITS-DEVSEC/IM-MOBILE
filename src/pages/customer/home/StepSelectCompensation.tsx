@@ -1,18 +1,16 @@
-import { useState } from "react";
 import {
   Card,
   Text,
   Title,
   Slider,
-  List,
   Stack,
   Group,
-  Button,
   Badge,
   Box,
   ScrollArea,
+  Button,
 } from "@mantine/core";
-import WizardButton from "../../components/WizardButton";
+import WizardButton from "../../../components/WizardButton";
 import { ArrowLeft } from "lucide-react";
 
 type StepSelectCompensationProps = {
@@ -36,13 +34,52 @@ export default function StepSelectCompensation({
   onNext,
   onBack,
 }: StepSelectCompensationProps) {
-  const [ownDamageLimit, setOwnDamageLimit] = useState(
-    compensationLimits.ownDamage
-  );
-
   const handleOwnDamageChange = (value: number) => {
-    setOwnDamageLimit(value);
     setCompensationLimits({ ...compensationLimits, ownDamage: value });
+  };
+
+  const emojiColorMapping = {
+    "🧑": { bg: "blue.1", text: "blue.6" },
+    "⚰️": { bg: "red.1", text: "red.6" },
+    "🏠": { bg: "yellow.1", text: "yellow.6" },
+    "🚑": { bg: "green.1", text: "green.6" },
+  } as const;
+
+  const renderCompensationCard = (
+    icon: keyof typeof emojiColorMapping,
+    title: string,
+    description: string
+  ) => {
+    const colors = emojiColorMapping[icon] || { bg: "gray.1", text: "gray.6" };
+
+    return (
+      <Card radius="md" p="sm" bg="rgb(248 250 252)">
+        <Group gap="sm">
+          <Box
+            bg={colors.bg}
+            c={colors.text}
+            p={4}
+            style={{
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Text size="xs">{icon}</Text>
+          </Box>
+          <div>
+            <Text size="sm" fw={600} c="dark.7">
+              {title}
+            </Text>
+            <Text size="sm" c="gray.7">
+              {description}
+            </Text>
+          </div>
+        </Group>
+      </Card>
+    );
   };
 
   return (
@@ -58,7 +95,13 @@ export default function StepSelectCompensation({
       </Group>
 
       <ScrollArea style={{ flex: 1 }} px="md">
-        <Title order={3} ta="center" mb="lg" c="dark">
+        <Title
+          order={2}
+          fw={700}
+          mb="xs"
+          c="primary.8"
+          style={{ textAlign: "center" }}
+        >
           Set Your Coverage Limits
         </Title>
 
@@ -74,7 +117,7 @@ export default function StepSelectCompensation({
                   How much should we cover for damages to your vehicle?
                 </Text>
                 <Slider
-                  value={ownDamageLimit}
+                  value={compensationLimits.ownDamage}
                   onChange={handleOwnDamageChange}
                   min={0}
                   max={200000}
@@ -89,7 +132,7 @@ export default function StepSelectCompensation({
                   ]}
                 />
                 <Badge color="blue" variant="filled" size="lg">
-                  Selected: ${ownDamageLimit.toLocaleString()}
+                  Selected: ${compensationLimits.ownDamage.toLocaleString()}
                 </Badge>
               </Card.Section>
             </Card>
@@ -97,41 +140,37 @@ export default function StepSelectCompensation({
 
           {(insuranceType === "third-party" ||
             insuranceType === "comprehensive") && (
-            <Card shadow="sm" padding="lg" radius="md" withBorder>
+            <Card padding="lg" radius="md" withBorder>
               <Card.Section p="md">
                 <Title order={4} mb="sm">
                   Third-Party Liability
                 </Title>
                 <Text size="sm" c="dimmed" mb="md">
-                  Standard coverage for injuries and property damage to others
+                  Coverage for injuries and property damage to others is fixed.
                 </Text>
 
-                <List size="sm" spacing="xs" center>
-                  <List.Item icon="🚑">
-                    <Text span fw={600}>
-                      Bodily Injury:
-                    </Text>{" "}
-                    Up to 250,000 ETB per person
-                  </List.Item>
-                  <List.Item icon="💀">
-                    <Text span fw={600}>
-                      Death:
-                    </Text>{" "}
-                    Up to 250,000 ETB (minimum 30,000 ETB)
-                  </List.Item>
-                  <List.Item icon="🏠">
-                    <Text span fw={600}>
-                      Property Damage:
-                    </Text>{" "}
-                    Up to 200,000 ETB
-                  </List.Item>
-                  <List.Item icon="🏥">
-                    <Text span fw={600}>
-                      Emergency Medical:
-                    </Text>{" "}
-                    Up to 15,000 ETB
-                  </List.Item>
-                </List>
+                <Stack gap="sm">
+                  {renderCompensationCard(
+                    "🧑",
+                    "Bodily Injury:",
+                    "Up to 250,000 ETB per person"
+                  )}
+                  {renderCompensationCard(
+                    "⚰️",
+                    "Death:",
+                    "Up to 250,000 ETB (minimum 30,000 ETB)"
+                  )}
+                  {renderCompensationCard(
+                    "🏠",
+                    "Property Damage:",
+                    "Up to 200,000 ETB"
+                  )}
+                  {renderCompensationCard(
+                    "🚑",
+                    "Emergency Medical:",
+                    "Up to 15,000 ETB"
+                  )}
+                </Stack>
               </Card.Section>
             </Card>
           )}

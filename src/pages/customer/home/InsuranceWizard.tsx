@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Progress } from "@mantine/core";
 import InsuranceSelection from "./InsuranceSelection";
 import StepSelectInsurance from "./StepSelectInsurance";
 import StepSelectCompensation from "./StepSelectCompensation";
 import VehicleDetails from "./StepVehicleDetails";
 import VehicleDetails2 from "./StepVehicleDetails2";
 import StepUploadCarPhotos from "./StepUploadCarPhotos";
-import HomeInsuranceForm from "./HomeInsuranceForm";
-import LifeInsuranceQuestionnaire from "./LifeInsuranceQuestionnaire";
-import BottomNavigation from "./BottomNavigation";
+import HomeInsuranceForm from "../policy/HomeInsuranceForm";
+import LifeInsuranceQuestionnaire from "../policy/LifeInsuranceQuestionnaire";
+import BottomNavigation from "../BottomNavigation";
+import StepCompareQuotes from "./StepCompareQuotes";
 
 export type WizardStep =
   | "insurance-category"
@@ -17,6 +17,7 @@ export type WizardStep =
   | "vehicle-details"
   | "vehicle-details-2"
   | "car-photos"
+  | "compare-quotes" // New step
   | "home-insurance-form"
   | "life-insurance-questionnaire";
 
@@ -26,7 +27,6 @@ const InsuranceWizard = () => {
   const [selectedInsurance, setSelectedInsurance] = useState<string>("");
   const [selectedInsuranceType, setSelectedInsuranceType] =
     useState<string>("");
-  const [activeTab, setActiveTab] = useState("motor"); // Updated to allow state change
   const [carPhotos, setCarPhotos] = useState<{ [key: string]: File | null }>({
     front: null,
     back: null,
@@ -37,29 +37,6 @@ const InsuranceWizard = () => {
     ownDamage: 100000,
     bodilyInjury: 250000,
   });
-
-  const getProgressValue = () => {
-    switch (currentStep) {
-      case "insurance-category":
-        return 10;
-      case "motor-insurance-type":
-        return 20;
-      case "select-compensation":
-        return 30;
-      case "vehicle-details":
-        return 50;
-      case "vehicle-details-2":
-        return 70;
-      case "car-photos":
-        return 90;
-      case "home-insurance-form":
-        return 50;
-      case "life-insurance-questionnaire":
-        return 30;
-      default:
-        return 0;
-    }
-  };
 
   const handleMotorSelected = () => {
     setCurrentStep("motor-insurance-type");
@@ -122,32 +99,25 @@ const InsuranceWizard = () => {
             carPhotos={carPhotos}
             setCarPhotos={setCarPhotos}
             onBack={() => setCurrentStep("vehicle-details-2")}
-            onNext={() => {
-              console.log("Application submitted", {
-                insuranceType: selectedInsuranceType,
-                compensationLimits,
-                vehicleDetails: {}, // Add your vehicle details state here
-                carPhotos,
-              });
-            }}
+            onNext={() => setCurrentStep("compare-quotes")}
           />
+        );
+      case "compare-quotes": // New case
+        return (
+          <StepCompareQuotes onBack={() => setCurrentStep("car-photos")} />
         );
       case "home-insurance-form":
         return (
           <HomeInsuranceForm
             onBack={() => setCurrentStep("insurance-category")}
-            onNext={function (): void {
-              throw new Error("Function not implemented.");
-            }}
+            onNext={() => {}}
           />
         );
       case "life-insurance-questionnaire":
         return (
           <LifeInsuranceQuestionnaire
             onBack={() => setCurrentStep("insurance-category")}
-            onNext={function (): void {
-              throw new Error("Function not implemented.");
-            }}
+            onNext={() => {}}
           />
         );
       default:
@@ -169,20 +139,6 @@ const InsuranceWizard = () => {
         backgroundColor: "#fff",
       }}
     >
-      <Progress
-        value={getProgressValue()}
-        size="sm"
-        color="#7E4005"
-        styles={{
-          root: {
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
-            borderBottom: "1px solid #f0f0f0",
-          },
-        }}
-      />
-
       <div
         style={{
           flex: 1,
@@ -194,10 +150,7 @@ const InsuranceWizard = () => {
         {renderStep()}
       </div>
 
-      <BottomNavigation
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab)}
-      />
+      <BottomNavigation />
     </div>
   );
 };

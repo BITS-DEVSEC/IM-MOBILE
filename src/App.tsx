@@ -1,11 +1,14 @@
 import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { RoleLayout } from "./layouts/RoleLayout";
 import { AuthProvider } from "./context/AuthContext";
-import InsuranceWizard from "./pages/customer/InsuranceWizard";
+import InsuranceWizard from "./pages/customer/home/InsuranceWizard";
 import Login from "./pages/auth/login";
 import PinPass from "./pages/auth/pinPass";
-import CarsList from "./pages/customer/CarsList";
-import CarDetails from "./pages/customer/CarDetails";
+import CarDetails from "./pages/customer/policy/CarDetails";
+import AccountSettingsPage from "./pages/customer/account/AccountSettingsPage";
+import PoliciesTabs from "./pages/customer/policy/PoliciesTabs";
+import HomePolicyDetails from "./pages/customer/policy/HomePolicyDetails";
+import LifePolicyDetails from "./pages/customer/policy/LifePolicyDetails";
 
 const InsurerHome = () => <h1>Insurer Home</h1>;
 const InsurerListings = () => <h1>Insurer Listings</h1>;
@@ -21,8 +24,11 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/pin" element={<PinPass />} />
-          <Route path="/cars" element={<CarsList />} />
-          <Route path="/cars/:id" element={<CarDetails />} />
+          <Route path="/policies" element={<PoliciesTabs />} />
+          <Route path="/policies/motor/:id" element={<CarDetails />} />
+          <Route path="/policies/home/:id" element={<HomePolicyDetails />} />
+          <Route path="/policies/life/:id" element={<LifePolicyDetails />} />
+          <Route path="/account" element={<AccountSettingsPage />} />
           <Route path="/insurer" element={<RoleLayout />}>
             <Route index element={<Navigate to="home" replace />} />
             <Route path="home" element={<InsurerHome />} />
@@ -43,7 +49,7 @@ export default function App() {
 
           <Route path="/insurance" element={<InsuranceWizard />} />
 
-          <Route path="*" element={<Navigate to="/insurer/home" replace />} />
+          <Route path="*" element={<Login />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

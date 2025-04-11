@@ -1,17 +1,20 @@
 import {
-  Text,
-  Grid,
-  Image,
   Box,
-  Stack,
-  FileInput,
-  Group,
+  Text,
   Title,
+  Alert,
+  Stack,
+  Group,
   Button,
   ScrollArea,
+  FileInput,
+  Flex,
+  Paper,
+  Image,
+  useMantineTheme,
 } from "@mantine/core";
-import WizardButton from "../../components/WizardButton";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Info, Upload } from "lucide-react";
+import WizardButton from "../../../components/WizardButton";
 
 interface StepUploadCarPhotosProps {
   carPhotos: { [key: string]: File | null };
@@ -35,6 +38,8 @@ export default function StepUploadCarPhotos({
   onBack,
   onNext,
 }: StepUploadCarPhotosProps) {
+  const theme = useMantineTheme();
+
   const handleFileChange = (angle: string, file: File | null) => {
     setCarPhotos({
       ...carPhotos,
@@ -42,17 +47,21 @@ export default function StepUploadCarPhotos({
     });
   };
 
-  const allPhotosUploaded = Object.values(carPhotos).every(
-    (photo) => photo !== null
-  );
-
   return (
-    <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      style={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        padding: "1rem",
+      }}
+    >
       <Group mb="md">
         <Button
           variant="subtle"
           leftSection={<ArrowLeft size={16} />}
           onClick={onBack}
+          color="primary"
         >
           Back
         </Button>
@@ -60,72 +69,108 @@ export default function StepUploadCarPhotos({
 
       <ScrollArea style={{ flex: 1 }} px="md">
         <Title
-          order={3}
-          style={{
-            marginBottom: "1.5rem",
-            color: "#2c3e50",
-            fontWeight: 600,
-            textAlign: "center",
-          }}
+          order={2}
+          fw={700}
+          mb="xs"
+          c="primary.8"
+          style={{ textAlign: "center" }}
         >
           Upload Vehicle Photos
         </Title>
+        <Text size="sm" c="dimmed" mb="lg">
+          Please upload clear photos of your vehicle
+        </Text>
 
-        <Stack gap="lg">
-          <Text size="sm" c="dimmed">
-            Please upload photos of your car from all 4 sides. Make sure the
-            photos are clear and show the entire vehicle.
+        <Alert
+          variant="light"
+          color="primary"
+          radius="md"
+          mb="xl"
+          icon={<Info size={18} />}
+        >
+          <Text size="sm">
+            Upload clear photos from all angles. Ensure the entire vehicle is
+            visible.
           </Text>
+        </Alert>
 
-          <Grid gutter="md">
-            {["front", "back", "left", "right"].map((angle) => (
-              <Grid.Col key={angle} span={{ base: 12, md: 6 }}>
-                <Stack gap="xs">
-                  <Text size="sm" tt="capitalize">
-                    {angle} view
+        <Stack gap="xl">
+          {["front", "back", "left", "right"].map((angle) => (
+            <Box key={angle}>
+              <Text size="sm" fw={600} tt="capitalize" mb="xs">
+                {angle} view
+              </Text>
+              <Flex
+                direction={{ base: "column", sm: "row" }}
+                gap="md"
+                align={{ sm: "center" }}
+              >
+                <Box style={{ flex: 2 }}>
+                  <FileInput
+                    accept="image/*"
+                    value={carPhotos[angle]}
+                    onChange={(file) => handleFileChange(angle, file)}
+                    placeholder={`Upload ${angle} view `}
+                    clearable
+                    leftSection={<Upload size={16} />}
+                    styles={{
+                      input: {
+                        height: 80,
+                        border: `2px dashed ${theme.colors.primary[5]}`,
+                        backgroundColor: "white",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        ":hover": {
+                          borderColor: theme.colors.primary[8],
+                          backgroundColor: theme.colors.gray[0],
+                        },
+                      },
+                      section: {
+                        marginRight: 0,
+                        position: "absolute",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                      },
+                      placeholder: {
+                        marginLeft: theme.spacing.xl,
+                        textAlign: "center",
+                      },
+                    }}
+                  />
+                  {carPhotos[angle] && (
+                    <Text size="xs" c="green.6" mt="xs">
+                      {carPhotos[angle]?.name} uploaded
+                    </Text>
+                  )}
+                </Box>
+
+                <Paper
+                  withBorder
+                  shadow="sm"
+                  radius="sm"
+                  p="xs"
+                  style={{ flex: 1 }}
+                >
+                  <Image
+                    src={angleExamples[angle as keyof typeof angleExamples]}
+                    alt={`${angle} angle example`}
+                    height={80}
+                    style={{ objectFit: "cover" }}
+                  />
+                  <Text size="xs" c="dimmed" ta="center" mt={4}>
+                    Example
                   </Text>
-
-                  <Box style={{ display: "flex", gap: "1rem" }}>
-                    <Box style={{ flex: 1 }}>
-                      <FileInput
-                        accept="image/*"
-                        value={carPhotos[angle]}
-                        onChange={(file) => handleFileChange(angle, file)}
-                        placeholder={`Upload ${angle} view`}
-                        clearable
-                      />
-                      {carPhotos[angle] && (
-                        <Text size="xs" c="green.6" mt="xs">
-                          {carPhotos[angle]?.name} uploaded
-                        </Text>
-                      )}
-                    </Box>
-
-                    <Box style={{ flex: 1 }}>
-                      <Image
-                        src={angleExamples[angle as keyof typeof angleExamples]}
-                        alt={`${angle} angle example`}
-                        radius="sm"
-                      />
-                      <Text size="xs" c="dimmed" ta="center" mt="xs">
-                        Example
-                      </Text>
-                    </Box>
-                  </Box>
-                </Stack>
-              </Grid.Col>
-            ))}
-          </Grid>
+                </Paper>
+              </Flex>
+            </Box>
+          ))}
         </Stack>
       </ScrollArea>
 
       <Group grow p="md" style={{ flexShrink: 0 }}>
         <WizardButton variant="back" onClick={onBack} />
-        <WizardButton
-          variant="submit"
-          onClick={onNext}
-          disabled={!allPhotosUploaded}
-        />
+        <WizardButton variant="next" onClick={onNext} />
       </Group>
     </Box>
   );

@@ -1,7 +1,6 @@
 import { Card, Text, Title, SimpleGrid, Container, Box } from "@mantine/core";
 import { Car } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import BottomNavigation from "./BottomNavigation";
 
 const mockInsuredCars = [
   {
@@ -22,21 +21,14 @@ const mockInsuredCars = [
   },
 ];
 
-export default function CarsList() {
+export default function MotorPolicies() {
   const navigate = useNavigate();
 
   return (
-    <Box
-      style={{
-        maxWidth: 420,
-        margin: "0 auto",
-        position: "relative",
-        minHeight: "100vh",
-      }}
-    >
+    <Box style={{ maxWidth: 420, margin: "0 auto" }}>
       <Container py="md" px="md" style={{ paddingBottom: 80 }}>
         <Title order={3} mb="lg" ta="center">
-          Your Insured Vehicles
+          Your Motor Policies
         </Title>
 
         <SimpleGrid cols={1} spacing="md">
@@ -47,7 +39,7 @@ export default function CarsList() {
               padding="lg"
               radius="md"
               withBorder
-              onClick={() => navigate(`/cars/${car.id}`)}
+              onClick={() => navigate(`/policies/motor/${car.id}`)}
               style={{ cursor: "pointer" }}
             >
               <div
@@ -67,13 +59,6 @@ export default function CarsList() {
           ))}
         </SimpleGrid>
       </Container>
-
-      <BottomNavigation
-        activeTab="motor"
-        onTabChange={function (): void {
-          throw new Error("Function not implemented.");
-        }}
-      />
     </Box>
   );
 }

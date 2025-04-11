@@ -1,5 +1,5 @@
 import { Title, TextInput, Stack, Box, Group } from "@mantine/core";
-import WizardButton from "../../components/WizardButton";
+import WizardButton from "../../../components/WizardButton";
 
 interface HomeInsuranceFormProps {
   onBack: () => void;
