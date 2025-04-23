@@ -4,13 +4,12 @@ import {
   Title,
   Container,
   Group,
-  Button,
   SimpleGrid,
   Box,
 } from "@mantine/core";
-import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import BottomNavigation from "../BottomNavigation";
+import BackButton from "../../../components/button/BackButton";
 
 const mockHomeDetails = {
   "1": {
@@ -69,13 +68,7 @@ export default function HomePolicyDetails() {
     >
       <Container py="md" px="md" style={{ paddingBottom: 80 }}>
         <Group mb="md">
-          <Button
-            variant="subtle"
-            leftSection={<ArrowLeft size={16} />}
-            onClick={() => navigate("/policies")}
-          >
-            Back to Policies
-          </Button>
+          <BackButton onClick={() => navigate("/policies")} />
         </Group>
 
         <Title order={3} mb="lg">

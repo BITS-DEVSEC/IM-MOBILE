@@ -80,7 +80,7 @@ export default function AccountSettings() {
                 A
               </Avatar>
               <Box>
-                <Text fw={600}>Abel T.</Text>
+                <Text fw={600}>Abel Asnake</Text>
                 <Badge color="green" size="sm">
                   Gold Member
                 </Badge>

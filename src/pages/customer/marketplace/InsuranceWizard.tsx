@@ -9,6 +9,7 @@ import HomeInsuranceForm from "../policy/HomeInsuranceForm";
 import LifeInsuranceQuestionnaire from "../policy/LifeInsuranceQuestionnaire";
 import BottomNavigation from "../BottomNavigation";
 import StepCompareQuotes from "./StepCompareQuotes";
+import AppContainer from "../../../components/AppContainer";
 
 export type WizardStep =
   | "insurance-category"
@@ -17,7 +18,7 @@ export type WizardStep =
   | "vehicle-details"
   | "vehicle-details-2"
   | "car-photos"
-  | "compare-quotes" // New step
+  | "compare-quotes"
   | "home-insurance-form"
   | "life-insurance-questionnaire";
 
@@ -126,19 +127,7 @@ const InsuranceWizard = () => {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "420px",
-        margin: "0 auto",
-        position: "relative",
-        height: "100vh",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        border: "1px solid #eaeaea",
-        backgroundColor: "#fff",
-      }}
-    >
+    <AppContainer>
       <div
         style={{
           flex: 1,
@@ -151,7 +140,7 @@ const InsuranceWizard = () => {
       </div>
 
       <BottomNavigation />
-    </div>
+    </AppContainer>
   );
 };
 

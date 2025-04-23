@@ -8,10 +8,9 @@ import {
   Badge,
   Box,
   ScrollArea,
-  Button,
 } from "@mantine/core";
-import WizardButton from "../../../components/WizardButton";
-import { ArrowLeft } from "lucide-react";
+import WizardButton from "../../../components/button/WizardButton";
+import BackButton from "../../../components/button/BackButton";
 
 type StepSelectCompensationProps = {
   insuranceType: string;
@@ -53,7 +52,7 @@ export default function StepSelectCompensation({
     const colors = emojiColorMapping[icon] || { bg: "gray.1", text: "gray.6" };
 
     return (
-      <Card radius="md" p="sm" bg="rgb(248 250 252)">
+      <Card radius="md" p="sm" bg="gray.0">
         <Group gap="sm">
           <Box
             bg={colors.bg}
@@ -85,13 +84,7 @@ export default function StepSelectCompensation({
   return (
     <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Group mb="md">
-        <Button
-          variant="subtle"
-          leftSection={<ArrowLeft size={16} />}
-          onClick={onBack}
-        >
-          Back
-        </Button>
+        <BackButton onClick={onBack} />
       </Group>
 
       <ScrollArea style={{ flex: 1 }} px="md">
@@ -175,12 +168,10 @@ export default function StepSelectCompensation({
             </Card>
           )}
         </Stack>
+        <Group grow p="md" style={{ flexShrink: 0 }}>
+          <WizardButton variant="next" onClick={onNext} />
+        </Group>
       </ScrollArea>
-
-      <Group grow p="md" style={{ flexShrink: 0 }}>
-        <WizardButton variant="back" onClick={onBack} />
-        <WizardButton variant="next" onClick={onNext} />
-      </Group>
     </Box>
   );
 }

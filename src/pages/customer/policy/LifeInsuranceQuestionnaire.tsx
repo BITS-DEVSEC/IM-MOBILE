@@ -7,7 +7,7 @@ import {
   TextInput,
   Group,
 } from "@mantine/core";
-import WizardButton from "../../../components/WizardButton";
+import WizardButton from "../../../components/button/WizardButton";
 import { useState } from "react";
 
 interface LifeInsuranceQuestionnaireProps {

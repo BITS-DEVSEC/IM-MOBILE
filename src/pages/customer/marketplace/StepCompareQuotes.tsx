@@ -2,15 +2,15 @@ import {
   Card,
   Text,
   Title,
-  Button,
-  Box,
   Group,
   Avatar,
   Badge,
   Stack,
+  Box,
 } from "@mantine/core";
-import { ArrowLeft, Star } from "lucide-react";
-import WizardButton from "../../../components/WizardButton";
+import { Star } from "lucide-react";
+import WizardButton from "../../../components/button/WizardButton";
+import BackButton from "../../../components/button/BackButton";
 
 interface StepCompareQuotesProps {
   onBack: () => void;
@@ -65,25 +65,27 @@ export default function StepCompareQuotes({ onBack }: StepCompareQuotesProps) {
   };
 
   return (
-    <Box
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        // backgroundColor: "#f8fafc",
-      }}
-    >
-      <Group mb="md">
-        <Button
-          variant="subtle"
-          leftSection={<ArrowLeft size={16} />}
-          onClick={onBack}
-        >
-          Back
-        </Button>
+    <Box>
+      <Group
+        mb="md"
+        style={{
+          position: "fixed",
+          backgroundColor: "white",
+          zIndex: 1000,
+          width: "420px",
+          top: 0,
+          paddingTop: "1rem",
+        }}
+      >
+        <BackButton onClick={onBack} />
       </Group>
-
-      <div style={{ paddingLeft: "1.5rem", paddingRight: "1.5rem" }}>
+      <div
+        style={{
+          paddingLeft: "1.5rem",
+          paddingRight: "1.5rem",
+          marginTop: "3rem",
+        }}
+      >
         <Title
           order={1}
           style={{ fontSize: "1.5rem", fontWeight: 700, color: "#1e293b" }}

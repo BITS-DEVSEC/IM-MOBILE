@@ -1,15 +1,7 @@
-import {
-  Title,
-  Select,
-  TextInput,
-  Group,
-  Box,
-  Stack,
-  Button,
-  ScrollArea,
-} from "@mantine/core";
-import WizardButton from "../../../components/WizardButton";
-import { ArrowLeft } from "lucide-react";
+import { Title, Select, Group, Box, Stack, ScrollArea } from "@mantine/core";
+import WizardButton from "../../../components/button/WizardButton";
+import { TextInputs } from "../../../components/inputs/textinput";
+import BackButton from "../../../components/button/BackButton";
 
 interface VehicleDetailsProps {
   onBack: () => void;
@@ -20,13 +12,7 @@ const VehicleDetails = ({ onBack, onNext }: VehicleDetailsProps) => {
   return (
     <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Group mb="md">
-        <Button
-          variant="subtle"
-          leftSection={<ArrowLeft size={16} />}
-          onClick={onBack}
-        >
-          Back
-        </Button>
+        <BackButton onClick={onBack} />
       </Group>
 
       <ScrollArea style={{ flex: 1 }} px="md">
@@ -55,7 +41,7 @@ const VehicleDetails = ({ onBack, onNext }: VehicleDetailsProps) => {
               "Three-Wheeled Vehicle",
               "Special Vehicle",
             ]}
-            radius="xl"
+            radius="sm"
             size="md"
             styles={{ label: { marginBottom: 4 } }}
           />
@@ -68,38 +54,24 @@ const VehicleDetails = ({ onBack, onNext }: VehicleDetailsProps) => {
               "Public Service (With Fare)",
               "Commercial Use (With Hire/Payment)",
             ]}
-            radius="xl"
+            radius="sm"
             size="md"
             styles={{ label: { marginBottom: 4 } }}
           />
-          <TextInput
+          <TextInputs
             label="Number of Passengers (including driver)"
             placeholder="Enter number of passengers"
-            radius="xl"
-            size="md"
-            styles={{ label: { marginBottom: 4 } }}
           />
-          <TextInput
+          <TextInputs
             label="Car Price (including accessories)"
             placeholder="Enter car price"
-            radius="xl"
-            size="md"
-            styles={{ label: { marginBottom: 4 } }}
           />
-          <TextInput
-            label="Goods"
-            placeholder="Enter goods details"
-            radius="xl"
-            size="md"
-            styles={{ label: { marginBottom: 4 } }}
-          />
+          <TextInputs label="Goods" placeholder="Enter goods details" />
         </Stack>
+        <Group grow p="md" style={{ flexShrink: 0 }}>
+          <WizardButton variant="next" onClick={onNext} />
+        </Group>
       </ScrollArea>
-
-      <Group grow p="md" style={{ flexShrink: 0 }}>
-        <WizardButton variant="back" onClick={onBack} />
-        <WizardButton variant="next" onClick={onNext} />
-      </Group>
     </Box>
   );
 };

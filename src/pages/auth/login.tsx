@@ -2,7 +2,7 @@ import { Container, Box, Flex, Group, Title, Text } from "@mantine/core";
 import { KeyRound, LockIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 import { ContainedInputs } from "../../components/inputs/text";
-import CustomButton from "../../components/button";
+import CustomButton from "../../components/button/button";
 
 export default function Login() {
   const navigate = useNavigate();

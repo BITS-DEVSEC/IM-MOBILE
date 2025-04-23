@@ -11,9 +11,11 @@ import {
   Collapse,
   Divider,
   ScrollArea,
+  Alert,
 } from "@mantine/core";
-import { Shield, ArrowLeft, Car, RefreshCw, ChevronDown } from "lucide-react";
-import WizardButton from "../../../components/WizardButton";
+import { Shield, Car, RefreshCw, ChevronDown, Info } from "lucide-react";
+import WizardButton from "../../../components/button/WizardButton";
+import BackButton from "../../../components/button/BackButton";
 
 type StepSelectInsuranceProps = {
   insuranceCategory: string;
@@ -26,20 +28,20 @@ export default function StepSelectInsurance({
   setInsuranceType,
   onBack,
 }: StepSelectInsuranceProps) {
-  const [selected, setSelected] = useState("comprehensive");
+  const [selected, setSelected] = useState<string | null>(null); // Initialize as null
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
 
   const insuranceOptions = [
     {
-      value: "comprehensive",
-      label: "Comprehensive",
-      description: "Covers both your car and others",
-      icon: <Shield size={20} />,
+      value: "third-party",
+      label: "Third Party",
+      description: "Covers damages to others only",
+      icon: <RefreshCw size={20} />,
       details: [
-        "Full coverage for your vehicle",
-        "Third-party liability protection",
-        "Theft and natural disaster coverage",
-        "24/7 roadside assistance",
+        "Mandatory minimum coverage",
+        "Covers damage to others' property",
+        "Includes injury liability",
+        "Most affordable option",
       ],
     },
     {
@@ -54,22 +56,25 @@ export default function StepSelectInsurance({
         "Does not cover third-party liabilities",
       ],
     },
+
     {
-      value: "third-party",
-      label: "Third Party",
-      description: "Covers damages to others only",
-      icon: <RefreshCw size={20} />,
+      value: "comprehensive",
+      label: "Comprehensive",
+      description: "Covers both your car and others",
+      icon: <Shield size={20} />,
       details: [
-        "Mandatory minimum coverage",
-        "Covers damage to others' property",
-        "Includes injury liability",
-        "Most affordable option",
+        "Full coverage for your vehicle",
+        "Third-party liability protection",
+        "Theft and natural disaster coverage",
+        "24/7 roadside assistance",
       ],
     },
   ];
 
   const handleContinue = () => {
-    setInsuranceType(selected);
+    if (selected) {
+      setInsuranceType(selected);
+    }
   };
 
   const toggleDetails = (value: string) => {
@@ -79,13 +84,7 @@ export default function StepSelectInsurance({
   return (
     <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Group mb="md">
-        <Button
-          variant="subtle"
-          leftSection={<ArrowLeft size={16} />}
-          onClick={onBack}
-        >
-          Back
-        </Button>
+        <BackButton onClick={onBack} />
       </Group>
 
       <ScrollArea style={{ flex: 1 }} px="md">
@@ -99,7 +98,18 @@ export default function StepSelectInsurance({
           {insuranceCategory === "motor" ? "Motor" : "Property"} Insurance
           Options
         </Title>
-
+        <Alert
+          variant="light"
+          color="primary"
+          radius="md"
+          mb="xl"
+          icon={<Info size={18} />}
+        >
+          <Text size="sm">
+            The type of coverage you choose determines what your insurance will
+            pay for in case of an accident or damage.
+          </Text>
+        </Alert>
         <Radio.Group value={selected} onChange={setSelected}>
           <Stack gap="sm">
             {insuranceOptions.map((option) => (
@@ -172,16 +182,14 @@ export default function StepSelectInsurance({
             ))}
           </Stack>
         </Radio.Group>
+        <Group grow p="md" style={{ flexShrink: 0 }}>
+          <WizardButton
+            variant="next"
+            onClick={handleContinue}
+            disabled={!selected} // Disable button if no option is selected
+          />
+        </Group>
       </ScrollArea>
-
-      <Group grow p="md" style={{ flexShrink: 0 }}>
-        <WizardButton variant="back" onClick={onBack} />
-        <WizardButton
-          variant="next"
-          onClick={handleContinue}
-          disabled={!selected}
-        />
-      </Group>
     </Box>
   );
 }

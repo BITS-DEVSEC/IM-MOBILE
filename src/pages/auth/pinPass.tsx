@@ -28,7 +28,7 @@ export default function PinPass() {
       if (newPin.length === 6) {
         setIsLoading(true);
         setTimeout(() => {
-          navigate("/insurance");
+          navigate("/dashboard");
         }, 1000);
       }
     }
