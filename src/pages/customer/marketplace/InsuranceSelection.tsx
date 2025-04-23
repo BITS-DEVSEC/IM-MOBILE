@@ -93,7 +93,7 @@ const InsuranceSelection = ({
     }
   };
 
-  function setOpened(_arg0: boolean): void {
+  function setOpened(): void {
     throw new Error("Function not implemented.");
   }
 
@@ -533,7 +533,7 @@ const InsuranceSelection = ({
 
         <Divider my="md" />
 
-        <Button fullWidth onClick={() => setOpened(false)}>
+        <Button fullWidth onClick={() => setOpened()}>
           Close
         </Button>
       </Modal>
