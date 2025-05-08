@@ -67,6 +67,36 @@ const VehicleDetails = ({ onBack, onNext }: VehicleDetailsProps) => {
             placeholder="Enter car price"
           />
           <TextInputs label="Goods" placeholder="Enter goods details" />
+          <Title order={4} fw={600} mt="md">
+            Current Residence Address
+          </Title>
+          <Select
+            label="Region"
+            placeholder="Select region"
+            data={[
+              "Addis Ababa",
+              "Afar",
+              "Amhara",
+              "Benishangul-Gumuz",
+              "Dire Dawa",
+              "Gambela",
+              "Harari",
+              "Oromia",
+              "Sidama",
+              "Somali",
+              "Southern Nations, Nationalities, and Peoples' (SNNP)",
+              "Tigray",
+            ]}
+            radius="sm"
+            size="md"
+          />
+          <TextInputs label="Zone" placeholder="Enter zone (if applicable)" />
+          <TextInputs label="Woreda" placeholder="Enter woreda" />
+          <TextInputs label="Kebele" placeholder="Enter kebele" />
+          <TextInputs
+            label="House Number / Street"
+            placeholder="Enter house number or street name"
+          />
         </Stack>
         <Group grow p="md" style={{ flexShrink: 0 }}>
           <WizardButton variant="next" onClick={onNext} />

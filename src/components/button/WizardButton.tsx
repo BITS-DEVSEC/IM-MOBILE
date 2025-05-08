@@ -5,7 +5,11 @@ type WizardButtonProps = ButtonProps & {
   onClick: () => void;
 };
 
-const WizardButton = ({ variant, onClick, ...props }: WizardButtonProps) => {
+const WizardButton = ({
+  variant = "next",
+  onClick,
+  ...props
+}: WizardButtonProps) => {
   const buttonConfig = {
     back: {
       label: "Back",
@@ -34,12 +38,19 @@ const WizardButton = ({ variant, onClick, ...props }: WizardButtonProps) => {
     },
   };
 
+  const config = buttonConfig[variant];
+
+  if (!config) {
+    console.error(`Invalid variant "${variant}" passed to WizardButton.`);
+    return null; // Return null if the variant is invalid
+  }
+
   return (
     <Button
       radius="md"
       onClick={onClick}
-      variant={buttonConfig[variant].variant}
-      color={buttonConfig[variant].color}
+      variant={config.variant}
+      color={config.color}
       style={{
         padding: "10px 24px",
         fontSize: "16px",
@@ -48,7 +59,7 @@ const WizardButton = ({ variant, onClick, ...props }: WizardButtonProps) => {
       }}
       {...props}
     >
-      {buttonConfig[variant].label}
+      {config.label}
     </Button>
   );
 };
