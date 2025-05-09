@@ -1,5 +1,4 @@
 import "@mantine/core/styles.css";
-
 import {
   createTheme,
   MantineProvider,
@@ -9,25 +8,26 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
 
-const base: MantineColorsTuple = [
-  "#faefef",
-  "#efdcdc",
-  "#e1b5b4",
-  "#d58b8a",
-  "#ca6866",
-  "#c55250",
-  "#c24644",
-  "#ac3836",
-  "#9a302f",
-  "#541718",
+// 🟤 Shades of #7E4005 (light to dark)
+const primaryColor: MantineColorsTuple = [
+  "#fef4ec",
+  "#fbe1cb",
+  "#f7c5a0",
+  "#f1a871",
+  "#eb8c49",
+  "#e47127",
+  "#c55f1e",
+  "#a14d18",
+  "#7e4005",
+  "#5a2d00",
 ];
 
 const theme = createTheme({
   colors: {
-    primary: base,
+    primary: primaryColor,
   },
   primaryColor: "primary",
-  primaryShade: { light: 9, dark: 9 },
+  primaryShade: { light: 8, dark: 8 },
 });
 
 createRoot(document.getElementById("root")!).render(
