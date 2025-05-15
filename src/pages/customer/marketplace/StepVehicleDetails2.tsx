@@ -6,18 +6,58 @@ import {
   ScrollArea,
   Alert,
   Text,
+  TextInput,
 } from "@mantine/core";
 import WizardButton from "../../../components/button/WizardButton";
 import { Info } from "lucide-react";
-import { TextInputs } from "../../../components/inputs/textinput";
 import BackButton from "../../../components/button/BackButton";
+import { useState } from "react";
 
 interface VehicleDetails2Props {
   onBack: () => void;
-  onNext: () => void;
+  onNext: (attributes: {
+    plate_number: string;
+    chassis_number: string;
+    engine_number: string;
+    make: string;
+    model: string;
+    year_of_manufacture: number;
+    estimated_value: number;
+  }) => void;
+  initialVehicleAttributes: {
+    plate_number: string;
+    chassis_number: string;
+    engine_number: string;
+    make: string;
+    model: string;
+    year_of_manufacture: number;
+    estimated_value: number;
+  };
 }
 
-const VehicleDetails2 = ({ onBack, onNext }: VehicleDetails2Props) => {
+const VehicleDetails2 = ({
+  onBack,
+  onNext,
+  initialVehicleAttributes,
+}: VehicleDetails2Props) => {
+  const [vehicleAttributes, setVehicleAttributes] = useState({
+    plate_number: initialVehicleAttributes.plate_number || "",
+    chassis_number: initialVehicleAttributes.chassis_number || "",
+    engine_number: initialVehicleAttributes.engine_number || "",
+    make: initialVehicleAttributes.make || "",
+    model: initialVehicleAttributes.model || "",
+    year_of_manufacture: initialVehicleAttributes.year_of_manufacture || 0,
+    estimated_value: initialVehicleAttributes.estimated_value || 0,
+  });
+
+  const handleNext = () => {
+    onNext({
+      ...vehicleAttributes,
+      year_of_manufacture: Number(vehicleAttributes.year_of_manufacture),
+      estimated_value: Number(vehicleAttributes.estimated_value),
+    });
+  };
+
   return (
     <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Group mb="md">
@@ -49,25 +89,88 @@ const VehicleDetails2 = ({ onBack, onNext }: VehicleDetails2Props) => {
         </Alert>
 
         <Stack gap="lg" pb="xl">
-          <TextInputs label="Plate Number" placeholder="Enter plate number" />
-          <TextInputs
+          <TextInput
+            label="Plate Number"
+            placeholder="Enter plate number"
+            value={vehicleAttributes.plate_number}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                plate_number: e.target.value,
+              }))
+            }
+          />
+          <TextInput
             label="Chassis Number"
             placeholder="Enter chassis number"
+            value={vehicleAttributes.chassis_number}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                chassis_number: e.target.value,
+              }))
+            }
           />
-          <TextInputs label="Engine Number" placeholder="Enter engine number" />
-          <TextInputs label="Make (Company)" placeholder="Enter vehicle make" />
-          <TextInputs label="Model" placeholder="Enter vehicle model" />
-          <TextInputs
-            label="Engine Capacity (CC)"
-            placeholder="Enter engine capacity"
+          <TextInput
+            label="Engine Number"
+            placeholder="Enter engine number"
+            value={vehicleAttributes.engine_number}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                engine_number: e.target.value,
+              }))
+            }
           />
-          <TextInputs
+          <TextInput
+            label="Make (Company)"
+            placeholder="Enter vehicle make"
+            value={vehicleAttributes.make}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                make: e.target.value,
+              }))
+            }
+          />
+          <TextInput
+            label="Model"
+            placeholder="Enter vehicle model"
+            value={vehicleAttributes.model}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                model: e.target.value,
+              }))
+            }
+          />
+          <TextInput
             label="Year of Manufacture"
             placeholder="Enter year of manufacture"
+            type="number"
+            value={vehicleAttributes.year_of_manufacture || ""}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                year_of_manufacture: Number(e.target.value),
+              }))
+            }
+          />
+          <TextInput
+            label="Estimated Value"
+            placeholder="Enter estimated value"
+            type="number"
+            value={vehicleAttributes.estimated_value || ""}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                estimated_value: Number(e.target.value),
+              }))
+            }
           />
         </Stack>
         <Group grow p="md" style={{ flexShrink: 0 }}>
-          <WizardButton variant="next" onClick={onNext} />
+          <WizardButton variant="next" onClick={handleNext} />
         </Group>
       </ScrollArea>
     </Box>

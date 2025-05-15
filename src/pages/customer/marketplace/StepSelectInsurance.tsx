@@ -12,10 +12,12 @@ import {
   Divider,
   ScrollArea,
   Alert,
+  Loader,
 } from "@mantine/core";
 import { Shield, Car, RefreshCw, ChevronDown, Info } from "lucide-react";
 import WizardButton from "../../../components/button/WizardButton";
 import BackButton from "../../../components/button/BackButton";
+import { useInsuranceTypes } from "../../../hooks/useInsuranceTypes";
 
 type StepSelectInsuranceProps = {
   insuranceCategory: string;
@@ -28,48 +30,50 @@ export default function StepSelectInsurance({
   setInsuranceType,
   onBack,
 }: StepSelectInsuranceProps) {
-  const [selected, setSelected] = useState<string | null>(null); // Initialize as null
+  const [selected, setSelected] = useState<string | null>(null);
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const { insuranceTypes, loading, error } = useInsuranceTypes();
 
-  const insuranceOptions = [
-    {
-      value: "third-party",
-      label: "Third Party",
-      description: "Covers damages to others only",
-      icon: <RefreshCw size={20} />,
-      details: [
-        "Mandatory minimum coverage",
-        "Covers damage to others' property",
-        "Includes injury liability",
-        "Most affordable option",
-      ],
-    },
-    {
-      value: "own-damage",
-      label: "Own Damage",
-      description: "Covers damages to your vehicle",
-      icon: <Car size={20} />,
-      details: [
-        "Covers repairs for your vehicle",
-        "Includes accident damage",
-        "Theft protection",
-        "Does not cover third-party liabilities",
-      ],
-    },
+  const coverageTypes =
+    insuranceTypes.find((type) => type.id.toString() === insuranceCategory)
+      ?.coverage_types || [];
 
-    {
-      value: "comprehensive",
-      label: "Comprehensive",
-      description: "Covers both your car and others",
-      icon: <Shield size={20} />,
-      details: [
-        "Full coverage for your vehicle",
-        "Third-party liability protection",
-        "Theft and natural disaster coverage",
-        "24/7 roadside assistance",
-      ],
-    },
-  ];
+  const dummyDetails: { [key: string]: string[] } = {
+    "third-party": [
+      "Mandatory minimum coverage",
+      "Covers damage to others' property",
+      "Includes injury liability",
+      "Most affordable option",
+    ],
+    "own-damage": [
+      "Covers repairs for your vehicle",
+      "Includes accident damage",
+      "Theft protection",
+      "Does not cover third-party liabilities",
+    ],
+    comprehensive: [
+      "Full coverage for your vehicle",
+      "Third-party liability protection",
+      "Theft and natural disaster coverage",
+      "24/7 roadside assistance",
+    ],
+  };
+
+  const insuranceOptions = coverageTypes.map((coverage) => ({
+    value: coverage.name.toLowerCase().replace(/\s+/g, "-"),
+    label: coverage.name,
+    description: coverage.description,
+    icon:
+      coverage.name === "Third Party" ? (
+        <RefreshCw size={20} />
+      ) : coverage.name === "Own Damage" ? (
+        <Car size={20} />
+      ) : (
+        <Shield size={20} />
+      ),
+    details:
+      dummyDetails[coverage.name.toLowerCase().replace(/\s+/g, "-")] || [],
+  }));
 
   const handleContinue = () => {
     if (selected) {
@@ -80,6 +84,36 @@ export default function StepSelectInsurance({
   const toggleDetails = (value: string) => {
     setExpandedCard(expandedCard === value ? null : value);
   };
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Loader size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box
+        style={{
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text c="red">Failed to load coverage types</Text>
+      </Box>
+    );
+  }
 
   return (
     <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -95,7 +129,9 @@ export default function StepSelectInsurance({
           c="primary.8"
           style={{ textAlign: "center" }}
         >
-          {insuranceCategory === "motor" ? "Motor" : "Property"} Insurance
+          {insuranceTypes.find(
+            (type) => type.id.toString() === insuranceCategory
+          )?.name || "Insurance"}{" "}
           Options
         </Title>
         <Alert
@@ -123,14 +159,22 @@ export default function StepSelectInsurance({
                 style={{ cursor: "pointer" }}
               >
                 <Box onClick={() => setSelected(option.value)}>
-                  <Group justify="space-between">
-                    <Group gap="sm">
+                  <Group justify="space-between" wrap="nowrap">
+                    <Group gap="sm" wrap="nowrap" style={{ flex: 1 }}>
                       <Radio value={option.value} />
-                      <Box>
+                      <Box style={{ flex: 1, maxWidth: "85%" }}>
                         <Group gap="xs">
                           <Text fw={500}>{option.label}</Text>
                         </Group>
-                        <Text size="sm" c="dimmed">
+                        <Text
+                          size="sm"
+                          c="dimmed"
+                          style={{
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
+                            overflowJIT: "break-word",
+                          }}
+                        >
                           {option.description}
                         </Text>
                       </Box>
@@ -186,7 +230,7 @@ export default function StepSelectInsurance({
           <WizardButton
             variant="next"
             onClick={handleContinue}
-            disabled={!selected} // Disable button if no option is selected
+            disabled={!selected}
           />
         </Group>
       </ScrollArea>

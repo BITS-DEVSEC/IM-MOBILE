@@ -13,15 +13,11 @@ import WizardButton from "../../../components/button/WizardButton";
 import BackButton from "../../../components/button/BackButton";
 
 type StepSelectCompensationProps = {
-  insuranceType: string;
+  insuranceType: string | undefined;
   compensationLimits: {
     ownDamage: number;
-    bodilyInjury: number;
   };
-  setCompensationLimits: (limits: {
-    ownDamage: number;
-    bodilyInjury: number;
-  }) => void;
+  setCompensationLimits: (limits: { ownDamage: number }) => void;
   onNext: () => void;
   onBack: () => void;
 };
@@ -34,7 +30,7 @@ export default function StepSelectCompensation({
   onBack,
 }: StepSelectCompensationProps) {
   const handleOwnDamageChange = (value: number) => {
-    setCompensationLimits({ ...compensationLimits, ownDamage: value });
+    setCompensationLimits({ ownDamage: value });
   };
 
   const emojiColorMapping = {

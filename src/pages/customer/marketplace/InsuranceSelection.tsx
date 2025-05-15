@@ -12,89 +12,94 @@ import {
   List,
   Box,
   Divider,
+  Loader,
 } from "@mantine/core";
 import { Home, Car, Heart, Info, AlertCircle, Shield } from "lucide-react";
 import WizardButton from "../../../components/button/WizardButton";
 import { useState } from "react";
+import { useInsuranceTypes } from "../../../hooks/useInsuranceTypes";
 
 interface InsuranceSelectionProps {
-  selectedInsurance: string | null;
+  selectedInsurance: string;
   onSelectInsurance: (id: string) => void;
   onMotorSelected: () => void;
   onOtherSelected: (type: string) => void;
 }
 
 const InsuranceSelection = ({
-  selectedInsurance: initialSelectedInsurance,
+  selectedInsurance,
   onSelectInsurance,
   onMotorSelected,
   onOtherSelected,
 }: InsuranceSelectionProps) => {
   const theme = useMantineTheme();
-  const primaryColor = theme.colors.primary[8]; // Using shade 8 from your primary color tuple
-  const [selectedInsurance, setSelectedInsurance] = useState<string | null>(
-    initialSelectedInsurance
-  );
+  const primaryColor = theme.colors.primary[8];
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<{
     title: string;
     description: string;
   } | null>(null);
-  const [motorModalOpen, setMotorModalOpen] = useState(false); // State for Motor Insurance Modal
+  const [motorModalOpen, setMotorModalOpen] = useState(false);
+  const { insuranceTypes, loading, error } = useInsuranceTypes();
 
-  const insuranceOptions = [
-    {
-      id: "home",
-      label: "Home Insurance",
-      description: "Protect your home and belongings",
-      icon: Home,
-      details:
-        "Home Insurance provides coverage for your house and personal belongings against risks like fire, theft, and natural disasters. It also includes liability protection in case someone gets injured on your property.",
-    },
-    {
-      id: "motor",
-      label: "Motor Insurance",
-      description: "Coverage for your vehicle",
-      icon: Car,
-      details:
-        "Motor Insurance covers damages to your vehicle caused by accidents, theft, or natural disasters. It also includes third-party liability coverage for injuries or damages caused to others.",
-    },
-    {
-      id: "life",
-      label: "Life Insurance",
-      description: "Secure your family's future",
-      icon: Heart,
-      details:
-        "Life Insurance ensures financial security for your loved ones in case of your untimely demise. It can also serve as an investment or savings tool depending on the policy type.",
-    },
-  ];
-
-  const handleCardClick = (id: string) => {
-    setSelectedInsurance(id);
+  const insuranceIcons: {
+    [key: string]: React.ComponentType<{ size: number; color: string }>;
+  } = {
+    Motor: Car,
+    Home: Home,
+    Life: Heart,
   };
 
-  const handleInfoClick = (option: (typeof insuranceOptions)[0]) => {
-    if (option.id === "motor") {
-      setMotorModalOpen(true); // Open Motor Insurance Modal
+  const handleCardClick = (id: string) => {
+    onSelectInsurance(id);
+  };
+
+  const handleInfoClick = (option: {
+    id: string;
+    name: string;
+    description: string;
+  }) => {
+    if (option.id === "1") {
+      setMotorModalOpen(true);
     } else {
-      setModalContent({ title: option.label, description: option.details });
+      setModalContent({ title: option.name, description: option.description });
       setModalOpen(true);
     }
   };
 
   const handleContinue = () => {
     if (selectedInsurance) {
-      onSelectInsurance(selectedInsurance);
-      if (selectedInsurance === "motor") {
+      if (selectedInsurance === "1") {
         onMotorSelected();
       } else {
-        onOtherSelected(selectedInsurance);
+        onOtherSelected(selectedInsurance === "2" ? "home" : "life");
       }
     }
   };
 
-  function setOpened(): void {
-    throw new Error("Function not implemented.");
+  if (loading) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Loader size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container size="xs" py="md">
+        <Text c="red" style={{ display: "flex", justifyContent: "center" }}>
+          Failed to load insurance types
+        </Text>
+      </Container>
+    );
   }
 
   return (
@@ -128,88 +133,93 @@ const InsuranceSelection = ({
       </Title>
 
       <Stack gap="md">
-        {insuranceOptions.map((option) => (
-          <Card
-            key={option.id}
-            padding="md"
-            radius="md"
-            withBorder
-            onClick={() => handleCardClick(option.id)}
-            style={{
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              border:
-                selectedInsurance === option.id
-                  ? `2px solid ${primaryColor}`
-                  : `1px solid ${theme.colors.gray[2]}`,
-              backgroundColor: "white",
-              boxShadow:
-                selectedInsurance === option.id
-                  ? theme.shadows.md
-                  : theme.shadows.sm,
-            }}
-          >
-            <div
+        {insuranceTypes.map((option) => {
+          const Icon = insuranceIcons[option.name] || Home;
+          return (
+            <Card
+              key={option.id}
+              padding="md"
+              radius="md"
+              withBorder
+              onClick={() => handleCardClick(option.id.toString())}
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                border:
+                  selectedInsurance === option.id.toString()
+                    ? `2px solid ${primaryColor}`
+                    : `1px solid ${theme.colors.gray[2]}`,
+                backgroundColor: "white",
+                boxShadow:
+                  selectedInsurance === option.id.toString()
+                    ? theme.shadows.md
+                    : theme.shadows.sm,
               }}
             >
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: theme.spacing.md,
+                  justifyContent: "space-between",
                 }}
               >
-                <ThemeIcon
-                  size="xl"
-                  radius="xl"
-                  variant="light"
-                  color={selectedInsurance === option.id ? "primary" : "gray"}
+                <div
                   style={{
-                    backgroundColor:
-                      selectedInsurance === option.id
-                        ? theme.colors.primary[0]
-                        : theme.colors.gray[0],
+                    display: "flex",
+                    alignItems: "center",
+                    gap: theme.spacing.md,
                   }}
                 >
-                  <option.icon size={24} color={primaryColor} />
-                </ThemeIcon>
-                <div>
-                  <Text fw={500} c="dark.7">
-                    {option.label}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    {option.description}
-                  </Text>
+                  <ThemeIcon
+                    size="xl"
+                    radius="xl"
+                    variant="light"
+                    color={
+                      selectedInsurance === option.id.toString()
+                        ? "primary"
+                        : "gray"
+                    }
+                    style={{
+                      backgroundColor:
+                        selectedInsurance === option.id.toString()
+                          ? theme.colors.primary[0]
+                          : theme.colors.gray[0],
+                    }}
+                  >
+                    <Icon size={24} color={primaryColor} />
+                  </ThemeIcon>
+                  <div>
+                    <Text fw={500} c="dark.7">
+                      {option.name} Insurance
+                    </Text>
+                    <Text size="sm" c="dimmed">
+                      {option.description}
+                    </Text>
+                  </div>
                 </div>
+                <ThemeIcon
+                  size="lg"
+                  radius="xl"
+                  variant="light"
+                  color="blue"
+                  style={{ cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleInfoClick({
+                      ...option,
+                      id: option.id.toString(),
+                    });
+                  }}
+                >
+                  <Info size={20} />
+                </ThemeIcon>
               </div>
-              <ThemeIcon
-                size="lg"
-                radius="xl"
-                variant="light"
-                color="blue"
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering card click
-                  handleInfoClick(option);
-                }}
-              >
-                <Info size={20} />
-              </ThemeIcon>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </Stack>
 
-      <div
-        style={{
-          display: "flex",
-          marginTop: theme.spacing.xl,
-        }}
-      >
+      <div style={{ display: "flex", marginTop: theme.spacing.xl }}>
         <WizardButton
           variant="continue"
           onClick={handleContinue}
@@ -223,7 +233,7 @@ const InsuranceSelection = ({
         onClose={() => setModalOpen(false)}
         title={modalContent?.title}
         centered
-        size={"sm"}
+        size="sm"
         overlayProps={{
           color: theme.colors.dark[9],
           opacity: 0.55,
@@ -241,7 +251,7 @@ const InsuranceSelection = ({
         onClose={() => setMotorModalOpen(false)}
         title="Motor Insurance"
         centered
-        size={"sm"}
+        size="sm"
         overlayProps={{
           color: theme.colors.dark[9],
           opacity: 0.55,
@@ -259,7 +269,6 @@ const InsuranceSelection = ({
             <Tabs.Tab value="coverage">Coverage</Tabs.Tab>
           </Tabs.List>
 
-          {/* Basics Tab */}
           <Tabs.Panel value="basics" pt="md">
             <Box mb="md">
               <Title
@@ -277,7 +286,6 @@ const InsuranceSelection = ({
                 associated with driving and owning a vehicle.
               </Text>
             </Box>
-
             <Box>
               <Title order={4} mb="sm">
                 Why Do You Need Motor Insurance?
@@ -321,7 +329,6 @@ const InsuranceSelection = ({
             </Box>
           </Tabs.Panel>
 
-          {/* Other Tabs (Types and Coverage) */}
           <Tabs.Panel value="types" pt="md">
             <Box mb="md">
               <Title order={4} mb="sm">
@@ -332,83 +339,23 @@ const InsuranceSelection = ({
                 offering varying levels of protection.
               </Text>
             </Box>
-
-            <Box mb="md" pl="md" style={{ borderLeft: "2px solid #228be6" }}>
-              <Title order={5} mb="sm">
-                1. Third-Party Liability Insurance
-              </Title>
-              <Text size="sm" mb="sm">
-                This is the minimum legal requirement in many countries
-                including Ethiopia. It covers only the damage or injury you
-                cause to other people or their property in an accident. It does
-                not cover any damage to your own car.
-              </Text>
-              <Text size="sm" fs="italic">
-                <Text span fw={600}>
-                  Example:
-                </Text>{" "}
-                If you cause an accident and damage someone else's car or injure
-                someone, your insurer will cover their expenses. But if your car
-                is damaged, you won't be covered under this policy.
-              </Text>
-            </Box>
-
-            <Box mb="md" pl="md" style={{ borderLeft: "2px solid #228be6" }}>
-              <Title order={5} mb="sm">
-                2. Own Damage Insurance
-              </Title>
-              <Text size="sm" mb="sm">
-                This type of insurance specifically covers damage to your own
-                vehicle caused by accidents, even if you are at fault. It can
-                also include additional coverage for damage caused by incidents
-                such as fire, theft, vandalism, or natural disasters (depending
-                on the policy).
-              </Text>
-              <Text size="sm" fs="italic">
-                <Text span fw={600}>
-                  Example:
-                </Text>{" "}
-                If you crash into a wall or another vehicle, your insurer will
-                cover the repairs to your own car. Additionally, it may also
-                cover damages caused by theft, fire, or vandalism.
-              </Text>
-            </Box>
-
-            <Box mb="md" pl="md" style={{ borderLeft: "2px solid #228be6" }}>
-              <Title order={5} mb="sm">
-                3. Comprehensive Insurance
-              </Title>
-              <Text size="sm" mb="sm">
-                This is the most extensive coverage. It covers:
-              </Text>
-              <List size="sm" spacing="xs" mb="sm">
-                <List.Item>
-                  Third-party damage (like liability insurance)
-                </List.Item>
-                <List.Item>
-                  Damage to your own car, even if you're at fault
-                </List.Item>
-                <List.Item>
-                  Theft, fire, and other types of accidental damage
-                </List.Item>
-                <List.Item>Vandalism or malicious damage</List.Item>
-                <List.Item>
-                  Natural disasters (e.g., flooding, earthquakes)
-                </List.Item>
-                <List.Item>
-                  Personal injury coverage may be included in some comprehensive
-                  policies
-                </List.Item>
-              </List>
-              <Text size="sm" fs="italic">
-                <Text span fw={600}>
-                  Example:
-                </Text>{" "}
-                If you crash into another vehicle and your car is damaged, or
-                your car is stolen, this insurance will cover repairs or
-                replacement, as well as third-party claims.
-              </Text>
-            </Box>
+            {insuranceTypes
+              .find((type) => type.id === 1)
+              ?.coverage_types.map((coverage) => (
+                <Box
+                  key={coverage.id}
+                  mb="md"
+                  pl="md"
+                  style={{ borderLeft: "2px solid #228be6" }}
+                >
+                  <Title order={5} mb="sm">
+                    {coverage.name}
+                  </Title>
+                  <Text size="sm" mb="sm">
+                    {coverage.description}
+                  </Text>
+                </Box>
+              ))}
           </Tabs.Panel>
 
           <Tabs.Panel value="coverage" pt="md">
@@ -430,7 +377,6 @@ const InsuranceSelection = ({
                 for the insurance).
               </Text>
             </Box>
-
             <Box mb="md">
               <Title order={4} mb="sm">
                 Why Does the User Choose the Coverage Amount?
@@ -440,7 +386,6 @@ const InsuranceSelection = ({
                 limits based on your needs and how much protection you want.
               </Text>
             </Box>
-
             <Box mb="md" pl="md" style={{ borderLeft: "2px solid #228be6" }}>
               <Title order={5} mb="sm">
                 Example: Death/Bodily Injury Liability
@@ -491,7 +436,6 @@ const InsuranceSelection = ({
                 </List.Item>
               </List>
             </Box>
-
             <Box mb="md" pl="md" style={{ borderLeft: "2px solid #228be6" }}>
               <Title order={5} mb="sm">
                 Example: Property Damage Liability
@@ -532,8 +476,7 @@ const InsuranceSelection = ({
         </Tabs>
 
         <Divider my="md" />
-
-        <Button fullWidth onClick={() => setOpened()}>
+        <Button fullWidth onClick={() => setMotorModalOpen(false)}>
           Close
         </Button>
       </Modal>

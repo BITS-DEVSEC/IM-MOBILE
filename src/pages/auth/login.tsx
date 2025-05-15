@@ -1,59 +1,133 @@
-import { Container, Box, Flex, Group, Title, Text } from "@mantine/core";
-import { KeyRound, LockIcon } from "lucide-react";
-import { useNavigate } from "react-router";
-import { ContainedInputs } from "../../components/inputs/text";
-import CustomButton from "../../components/button/button";
+import React, { useState } from "react";
+import { useForm } from "@mantine/form";
+import {
+  TextInput,
+  PasswordInput,
+  Button,
+  Paper,
+  Title,
+  Text,
+  Group,
+  Anchor,
+} from "@mantine/core";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import ET from "../../assets/image.png";
 
-export default function Login() {
+export const Login: React.FC = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const [isPhoneLogin, setIsPhoneLogin] = useState(true); // Default to phone number
+
+  const form = useForm({
+    initialValues: {
+      email: "",
+      phone_number: "",
+      password: "",
+    },
+    validate: {
+      email: (value) => (!isPhoneLogin && !value ? "Email is required" : null),
+      phone_number: (value) =>
+        isPhoneLogin && !value ? "Phone number is required" : null,
+      password: (value) => (!value ? "Password is required" : null),
+    },
+  });
+
+  const handleSubmit = async (values: typeof form.values) => {
+    const identifier = isPhoneLogin
+      ? `+251${values.phone_number}`
+      : values.email;
+
+    await login({
+      [isPhoneLogin ? "phone_number" : "email"]: identifier,
+      password: values.password,
+    });
+  };
 
   return (
-    <Container
-      size={420}
-      px={0}
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        height: "100vh",
-        backgroundColor: "#fff",
-      }}
+    <Paper
+      radius="md"
+      p="xl"
+      withBorder
+      style={{ maxWidth: 400, margin: "auto", marginTop: 100 }}
     >
-      {/* Decorative elements */}
-      <Box
-        miw={"10%"}
-        mih={"10vh"}
-        bg="primary"
-        style={{ position: "relative" }}
-      ></Box>
-
-      {/* Login form container */}
-      <Container mt="lg" px="md" style={{ maxWidth: 420 }}>
-        <Flex gap={20} direction="column">
-          <Group justify="space-between" align="center" gap={20}>
-            <Flex direction="column">
-              <Title order={4}>Welcome Back, to Insurance Marketplace</Title>
-              <Text size="xs" c="dimmed">
-                LOGIN TO YOUR ACCOUNT
-              </Text>
-            </Flex>
-            <Flex justify="flex-end">
-              <LockIcon size={25} />
-            </Flex>
-          </Group>
-
-          <ContainedInputs
+      <Title
+        order={2}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        mb="md"
+      >
+        Login
+      </Title>
+      <form onSubmit={form.onSubmit(handleSubmit)}>
+        {isPhoneLogin ? (
+          <TextInput
             label="Phone Number"
-            placeholder="Enter Your Phone Number"
+            placeholder="912345678"
+            leftSection={
+              <Group gap={5}>
+                <img src={ET} alt="ET" style={{ width: 20, height: 20 }} />
+                <Text size="sm" c="dimmed">
+                  +251
+                </Text>
+              </Group>
+            }
+            leftSectionWidth={85}
+            {...form.getInputProps("phone_number")}
+            mb="md"
           />
-
-          <CustomButton
-            action={() => navigate("/pin")}
-            icon={<KeyRound size={18} />}
-            ltr
-            label="Login"
+        ) : (
+          <TextInput
+            label="Email"
+            placeholder="your@email.com"
+            {...form.getInputProps("email")}
+            mb="md"
           />
-        </Flex>
-      </Container>
-    </Container>
+        )}
+        <PasswordInput
+          label="Password"
+          placeholder="Your password"
+          {...form.getInputProps("password")}
+          mb="md"
+        />
+        <Group justify="space-between" mb="md">
+          <Anchor
+            component="button"
+            type="button"
+            color="dimmed"
+            onClick={() => setIsPhoneLogin(!isPhoneLogin)}
+            size="sm"
+          >
+            {isPhoneLogin ? "Use email instead" : "Use phone number instead"}
+          </Anchor>
+          <Anchor
+            component="button"
+            type="button"
+            color="dimmed"
+            size="sm"
+            onClick={() => navigate("/forgot-password")}
+          >
+            Forgot password?
+          </Anchor>
+        </Group>
+        <Button type="submit" fullWidth>
+          Login
+        </Button>
+      </form>
+      <Text
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        mt="md"
+      >
+        Don't have an account?
+        <Anchor onClick={() => navigate("/register")}>Register</Anchor>
+      </Text>
+    </Paper>
   );
-}
+};
