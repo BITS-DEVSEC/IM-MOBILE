@@ -19,11 +19,12 @@ import { VerifyOtp } from "./pages/auth/VerifyOtp";
 import { ForgotPassword } from "./pages/auth/ForgotPassword";
 import { ResetPassword } from "./pages/auth/ResetPassword";
 import { RoleLayout } from "./layouts/RoleLayout";
+import { AdminLogin } from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const InsurerHome = () => <h1>Insurer Home</h1>;
 const InsurerListings = () => <h1>Insurer Listings</h1>;
-const AdminHome = () => <h1>Admin Home</h1>;
-const AdminListings = () => <h1>Admin Listings</h1>;
+
 const CustomerHome = () => <h1>Customer Home</h1>;
 const CustomerListings = () => <h1>Customer Listings</h1>;
 
@@ -63,12 +64,6 @@ export default function App() {
                 <Route path="listings" element={<InsurerListings />} />
               </Route>
 
-              <Route path="/admin" element={<RoleLayout />}>
-                <Route index element={<Navigate to="home" replace />} />
-                <Route path="home" element={<AdminHome />} />
-                <Route path="listings" element={<AdminListings />} />
-              </Route>
-
               <Route path="/customer" element={<RoleLayout />}>
                 <Route index element={<Navigate to="home" replace />} />
                 <Route path="home" element={<CustomerHome />} />
@@ -81,6 +76,10 @@ export default function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </AuthProvider>
+        <Routes>
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Routes>
       </MantineProvider>
     </BrowserRouter>
   );

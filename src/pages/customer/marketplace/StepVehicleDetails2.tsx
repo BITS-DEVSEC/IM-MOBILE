@@ -7,6 +7,7 @@ import {
   Alert,
   Text,
   TextInput,
+  Select,
 } from "@mantine/core";
 import WizardButton from "../../../components/button/WizardButton";
 import { Info } from "lucide-react";
@@ -46,11 +47,29 @@ const VehicleDetails2 = ({
     engine_number: initialVehicleAttributes.engine_number || "",
     make: initialVehicleAttributes.make || "",
     model: initialVehicleAttributes.model || "",
-    year_of_manufacture: initialVehicleAttributes.year_of_manufacture || 0,
+    year_of_manufacture:
+      initialVehicleAttributes.year_of_manufacture || undefined,
     estimated_value: initialVehicleAttributes.estimated_value || 0,
   });
 
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: currentYear - 1950 + 1 }, (_, i) =>
+    (1950 + i).toString()
+  );
+
+  const isFormValid =
+    vehicleAttributes.plate_number.trim() !== "" &&
+    vehicleAttributes.chassis_number.trim() !== "" &&
+    vehicleAttributes.engine_number.trim() !== "" &&
+    vehicleAttributes.make.trim() !== "" &&
+    vehicleAttributes.model.trim() !== "" &&
+    vehicleAttributes.year_of_manufacture &&
+    vehicleAttributes.year_of_manufacture >= 1950 &&
+    vehicleAttributes.year_of_manufacture <= currentYear &&
+    vehicleAttributes.estimated_value > 0;
+
   const handleNext = () => {
+    if (!isFormValid) return;
     onNext({
       ...vehicleAttributes,
       year_of_manufacture: Number(vehicleAttributes.year_of_manufacture),
@@ -84,7 +103,7 @@ const VehicleDetails2 = ({
         >
           <Text size="sm">
             You can find all these details on your car's registration document
-            (Libre) visible.
+            (Libre).
           </Text>
         </Alert>
 
@@ -100,6 +119,7 @@ const VehicleDetails2 = ({
               }))
             }
           />
+
           <TextInput
             label="Chassis Number"
             placeholder="Enter chassis number"
@@ -111,6 +131,7 @@ const VehicleDetails2 = ({
               }))
             }
           />
+
           <TextInput
             label="Engine Number"
             placeholder="Enter engine number"
@@ -122,6 +143,7 @@ const VehicleDetails2 = ({
               }))
             }
           />
+
           <TextInput
             label="Make (Company)"
             placeholder="Enter vehicle make"
@@ -133,6 +155,7 @@ const VehicleDetails2 = ({
               }))
             }
           />
+
           <TextInput
             label="Model"
             placeholder="Enter vehicle model"
@@ -144,18 +167,33 @@ const VehicleDetails2 = ({
               }))
             }
           />
-          <TextInput
+
+          <Select
             label="Year of Manufacture"
-            placeholder="Enter year of manufacture"
-            type="number"
-            value={vehicleAttributes.year_of_manufacture || ""}
-            onChange={(e) =>
-              setVehicleAttributes((prev) => ({
-                ...prev,
-                year_of_manufacture: Number(e.target.value),
-              }))
+            placeholder="Select or enter year"
+            data={yearOptions}
+            searchable
+            value={
+              vehicleAttributes.year_of_manufacture
+                ? vehicleAttributes.year_of_manufacture.toString()
+                : ""
             }
+            onChange={(value) => {
+              const year = Number(value);
+              if (!isNaN(year) && year >= 1950 && year <= currentYear) {
+                setVehicleAttributes((prev) => ({
+                  ...prev,
+                  year_of_manufacture: year,
+                }));
+              } else {
+                setVehicleAttributes((prev) => ({
+                  ...prev,
+                  year_of_manufacture: 0,
+                }));
+              }
+            }}
           />
+
           <TextInput
             label="Estimated Value"
             placeholder="Enter estimated value"
@@ -169,8 +207,13 @@ const VehicleDetails2 = ({
             }
           />
         </Stack>
+
         <Group grow p="md" style={{ flexShrink: 0 }}>
-          <WizardButton variant="next" onClick={handleNext} />
+          <WizardButton
+            variant="next"
+            onClick={handleNext}
+            disabled={!isFormValid}
+          />
         </Group>
       </ScrollArea>
     </Box>

@@ -9,9 +9,11 @@ import {
   Select,
   Text,
   Anchor,
+  Group,
 } from "@mantine/core";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import ET from "../../assets/image.png";
 
 export const Register: React.FC = () => {
   const { registerCustomer, registerUser } = useAuth();
@@ -41,7 +43,7 @@ export const Register: React.FC = () => {
   const handleSubmit = async (values: typeof form.values) => {
     if (isCustomer) {
       await registerCustomer({
-        phone_number: values.phone_number,
+        phone_number: `+251${values.phone_number}`,
         fin: values.fin,
         password: values.password,
         password_confirmation: values.password_confirmation,
@@ -79,7 +81,16 @@ export const Register: React.FC = () => {
           <>
             <TextInput
               label="Phone Number"
-              placeholder="+251912345678"
+              placeholder="912345678"
+              leftSection={
+                <Group gap={5}>
+                  <img src={ET} alt="ET" style={{ width: 20, height: 20 }} />
+                  <Text size="sm" c="dimmed">
+                    +251
+                  </Text>
+                </Group>
+              }
+              leftSectionWidth={85}
               {...form.getInputProps("phone_number")}
               mb="md"
             />

@@ -35,9 +35,13 @@ export const useInsuranceTypes = () => {
     const fetchInsuranceTypes = async () => {
       try {
         setLoading(true);
-        console.log("Fetching insurance types from: /api/insurance_types");
+        const baseUrl =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+        console.log(
+          `Fetching insurance types from: ${baseUrl}/insurance_types`
+        );
 
-        const response = await fetch("/api/insurance_types", {
+        const response = await fetch(`${baseUrl}/insurance_types`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

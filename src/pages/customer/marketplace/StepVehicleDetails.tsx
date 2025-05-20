@@ -58,6 +58,7 @@ const VehicleDetails = ({
     car_price: initialVehicleDetails.car_price || 0,
     goods: initialVehicleDetails.goods || "",
   });
+
   const [residenceAddress, setResidenceAddress] = useState({
     region: initialResidenceAddress.region || "",
     zone: initialResidenceAddress.zone || "",
@@ -65,6 +66,18 @@ const VehicleDetails = ({
     kebele: initialResidenceAddress.kebele || "",
     house_number: initialResidenceAddress.house_number || "",
   });
+
+  const isFormValid =
+    vehicleDetails.vehicle_type &&
+    vehicleDetails.vehicle_usage &&
+    vehicleDetails.number_of_passengers > 0 &&
+    vehicleDetails.car_price > 0 &&
+    vehicleDetails.goods &&
+    residenceAddress.region &&
+    residenceAddress.zone &&
+    residenceAddress.woreda &&
+    residenceAddress.kebele &&
+    residenceAddress.house_number;
 
   const handleNext = () => {
     onNext({
@@ -120,6 +133,7 @@ const VehicleDetails = ({
               }))
             }
           />
+
           <Select
             label="Vehicle Usage"
             placeholder="Select vehicle usage"
@@ -140,18 +154,29 @@ const VehicleDetails = ({
               }))
             }
           />
-          <TextInput
+
+          <Select
             label="Number of Passengers (including driver)"
-            placeholder="Enter number of passengers"
-            type="number"
-            value={vehicleDetails.number_of_passengers || ""}
-            onChange={(e) =>
+            placeholder="Enter or select number"
+            data={Array.from({ length: 50 }, (_, i) => (i + 1).toString())}
+            value={
+              vehicleDetails.number_of_passengers
+                ? vehicleDetails.number_of_passengers.toString()
+                : ""
+            }
+            onChange={(value) =>
               setVehicleDetails((prev) => ({
                 ...prev,
-                number_of_passengers: Number(e.target.value),
+                number_of_passengers: Number(value),
               }))
             }
+            searchable
+            radius="sm"
+            size="md"
+            styles={{ label: { marginBottom: 4 } }}
+            allowDeselect={false}
           />
+
           <TextInput
             label="Car Price (including accessories)"
             placeholder="Enter car price"
@@ -164,6 +189,7 @@ const VehicleDetails = ({
               }))
             }
           />
+
           <TextInput
             label="Goods"
             placeholder="Enter goods details"
@@ -175,9 +201,11 @@ const VehicleDetails = ({
               }))
             }
           />
+
           <Title order={4} fw={600} mt="md">
             Current Residence Address
           </Title>
+
           <Select
             label="Region"
             placeholder="Select region"
@@ -205,6 +233,7 @@ const VehicleDetails = ({
               }))
             }
           />
+
           <TextInput
             label="Zone"
             placeholder="Enter zone (if applicable)"
@@ -216,6 +245,7 @@ const VehicleDetails = ({
               }))
             }
           />
+
           <TextInput
             label="Woreda"
             placeholder="Enter woreda"
@@ -227,6 +257,7 @@ const VehicleDetails = ({
               }))
             }
           />
+
           <TextInput
             label="Kebele"
             placeholder="Enter kebele"
@@ -238,6 +269,7 @@ const VehicleDetails = ({
               }))
             }
           />
+
           <TextInput
             label="House Number / Street"
             placeholder="Enter house number or street name"
@@ -250,8 +282,13 @@ const VehicleDetails = ({
             }
           />
         </Stack>
+
         <Group grow p="md" style={{ flexShrink: 0 }}>
-          <WizardButton variant="next" onClick={handleNext} />
+          <WizardButton
+            variant="next"
+            onClick={handleNext}
+            disabled={!isFormValid}
+          />
         </Group>
       </ScrollArea>
     </Box>

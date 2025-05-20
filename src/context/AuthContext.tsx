@@ -78,7 +78,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`/api${url}`, {
+    const baseUrl =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}${url}`, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -86,7 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error || `Request failed: ${response.status}`);
+      throw new Error(JSON.stringify(data)); // Pass the entire error data as a string
     }
     return data;
   };
@@ -107,7 +109,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       navigate("/dashboard");
     } catch (error) {
       notifications.show({
-        message: (error as Error).message,
+        message: "Please check your phone number or password again",
         color: "red",
         icon: <AlertCircle />,
       });
@@ -151,12 +153,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       // Encode phone number to preserve "+"
       navigate(`/verify-otp?phone=${encodeURIComponent(data.phone_number)}`);
     } catch (error) {
+      let errorMessage = "An error occurred during registration";
+      try {
+        const errorData = JSON.parse((error as Error).message);
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.join(", ");
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (parseError) {
+        errorMessage = (error as Error).message;
+      }
       notifications.show({
-        message: (error as Error).message,
+        message: errorMessage,
         color: "red",
         icon: <AlertCircle />,
       });
-      throw error;
+      throw new Error(errorMessage);
     }
   };
 

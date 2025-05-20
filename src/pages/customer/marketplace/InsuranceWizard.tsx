@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import InsuranceSelection from "./InsuranceSelection";
 import StepSelectInsurance from "./StepSelectInsurance";
 import StepSelectCompensation from "./StepSelectCompensation";
@@ -14,7 +14,7 @@ import { useInsuranceTypes } from "../../../hooks/useInsuranceTypes";
 import { useAuth } from "../../../context/AuthContext";
 import { notifications } from "@mantine/notifications";
 import { AlertCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export type WizardStep =
   | "insurance-category"
@@ -29,10 +29,74 @@ export type WizardStep =
   | "life-insurance-type"
   | "life-insurance-options";
 
+interface QuotationRequest {
+  error: string;
+  id: number;
+  form_data: {
+    coverage_amount: number;
+    vehicle_details: {
+      vehicle_type: string;
+      vehicle_usage: string;
+      number_of_passengers: number;
+      car_price: number;
+      goods: string;
+    };
+    current_residence_address: {
+      region: string;
+      zone: string;
+      woreda: string;
+      kebele: string;
+      house_number: string;
+    };
+  };
+  created_at: string;
+  updated_at: string;
+  user: {
+    id: number;
+    email: string | null;
+    verified: boolean;
+    phone_number: string;
+    fin: string;
+    created_at: string;
+    updated_at: string;
+  };
+  insurance_type: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  coverage_type: {
+    id: number;
+    insurance_type_id: number;
+    name: string;
+    description: string;
+    created_at: string;
+    updated_at: string;
+  };
+  vehicle: {
+    id: number;
+    plate_number: string;
+    chassis_number: string;
+    engine_number: string;
+    year_of_manufacture: number;
+    make: string;
+    model: string;
+    estimated_value: string;
+    front_view_photo_url: string | null;
+    back_view_photo_url: string | null;
+    left_view_photo_url: string | null;
+    right_view_photo_url: string | null;
+    engine_photo_url: string | null;
+    chassis_number_photo_url: string | null;
+    libre_photo_url: string | null;
+  };
+}
+
 const InsuranceWizard = () => {
   const { user, accessToken } = useAuth();
   const { insuranceTypes } = useInsuranceTypes();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] =
     useState<WizardStep>("insurance-category");
   const [formData, setFormData] = useState({
@@ -72,6 +136,99 @@ const InsuranceWizard = () => {
       libre: null as File | null,
     },
   });
+  const [draftId, setDraftId] = useState<number | null>(null);
+
+  // Extract draftId from URL query parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const draftIdParam = params.get("draftId");
+    if (draftIdParam) {
+      setDraftId(Number(draftIdParam));
+    }
+  }, [location]);
+
+  // Fetch draft data if draftId exists
+  useEffect(() => {
+    const fetchDraftData = async () => {
+      if (!draftId || !accessToken) return;
+
+      try {
+        const baseUrl =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+        const response = await fetch(
+          `${baseUrl}/quotation_requests/${draftId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        const data: QuotationRequest = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch draft data");
+        }
+
+        // Verify the draft belongs to the current user
+        if (data.user.id !== user?.id) {
+          throw new Error("Unauthorized access to this draft");
+        }
+
+        // Pre-fill form data with draft data
+        setFormData({
+          insurance_type_id: data.insurance_type.id,
+          coverage_type_id: data.coverage_type.id,
+          coverage_amount: data.form_data.coverage_amount,
+          vehicle_details: {
+            vehicle_type: data.form_data.vehicle_details.vehicle_type,
+            vehicle_usage: data.form_data.vehicle_details.vehicle_usage,
+            number_of_passengers:
+              data.form_data.vehicle_details.number_of_passengers,
+            car_price: data.form_data.vehicle_details.car_price,
+            goods: data.form_data.vehicle_details.goods,
+          },
+          current_residence_address: {
+            region: data.form_data.current_residence_address.region,
+            zone: data.form_data.current_residence_address.zone,
+            woreda: data.form_data.current_residence_address.woreda,
+            kebele: data.form_data.current_residence_address.kebele,
+            house_number: data.form_data.current_residence_address.house_number,
+          },
+          vehicle_attributes: {
+            plate_number: data.vehicle.plate_number,
+            chassis_number: data.vehicle.chassis_number,
+            engine_number: data.vehicle.engine_number,
+            make: data.vehicle.make,
+            model: data.vehicle.model,
+            year_of_manufacture: data.vehicle.year_of_manufacture,
+            estimated_value: Number(data.vehicle.estimated_value),
+          },
+          car_photos: {
+            front: null,
+            back: null,
+            left: null,
+            right: null,
+            engine: null,
+            chassis_number: null,
+            libre: null,
+          },
+        });
+
+        // Start at the first step to allow editing
+        setCurrentStep("insurance-category");
+      } catch (error) {
+        notifications.show({
+          message: (error as Error).message || "Failed to load draft data",
+          color: "red",
+          icon: <AlertCircle />,
+        });
+      }
+    };
+
+    fetchDraftData();
+  }, [draftId, accessToken, user?.id]);
 
   const handleMotorSelected = () => {
     console.log("Motor selected, moving to motor-insurance-type");
@@ -142,7 +299,6 @@ const InsuranceWizard = () => {
         missingFields.push("year_of_manufacture");
       if (formData.vehicle_attributes.estimated_value <= 0)
         missingFields.push("estimated_value");
-      // Require at least one critical photo (e.g., front, chassis_number, or libre)
       if (
         !formData.car_photos.front &&
         !formData.car_photos.chassis_number &&
@@ -174,7 +330,6 @@ const InsuranceWizard = () => {
       user_id: user.id,
       insurance_type_id: formData.insurance_type_id,
       coverage_type_id: formData.coverage_type_id,
-      status: "draft",
       form_data: {
         coverage_amount: formData.coverage_amount,
         vehicle_details: {
@@ -222,7 +377,6 @@ const InsuranceWizard = () => {
       }
     });
 
-    // Debug FormData contents
     for (const [key, value] of formDataToSend.entries()) {
       console.log(
         `FormData entry: ${key} =`,
@@ -231,9 +385,16 @@ const InsuranceWizard = () => {
     }
 
     try {
-      console.log("Sending fetch request to /api/quotation_requests/");
-      const response = await fetch("/api/quotation_requests/", {
-        method: "POST",
+      const baseUrl =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+      const url = draftId
+        ? `${baseUrl}/quotation_requests/${draftId}`
+        : `${baseUrl}/quotation_requests/`;
+      const method = draftId ? "PATCH" : "POST";
+
+      console.log(`Sending fetch request to ${url} with method ${method}`);
+      const response = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -257,11 +418,14 @@ const InsuranceWizard = () => {
       }
 
       console.log("Quotation request successful:", data);
+      const quotationId = data.id;
       notifications.show({
-        message: "Quotation request submitted successfully",
+        message: draftId
+          ? `Quotation request #${quotationId} updated successfully!`
+          : `Quotation request #${quotationId} submitted successfully!`,
         color: "green",
       });
-      navigate("/policies");
+      navigate("/policies"); // Navigate back to LifePolicies page
     } catch (error) {
       console.error("Fetch error:", error);
       notifications.show({
