@@ -104,16 +104,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setAccessToken(data.data.access_token);
       setRefreshToken(data.data.refresh_token);
       localStorage.setItem("refresh_token", data.data.refresh_token);
-      localStorage.setItem("user", JSON.stringify(data.data.user)); // Persist user
+      localStorage.setItem("user", JSON.stringify(data.data.user));
       notifications.show({ message: "Login successful", color: "green" });
       navigate("/dashboard");
     } catch (error) {
+      let errorMessage = "An error occurred during login";
+      try {
+        const errorData = JSON.parse((error as Error).message);
+        if (
+          errorData.error === "Unauthorized" ||
+          errorData.error === "Invalid credentials"
+        ) {
+          errorMessage = "Please check your phone number or password again";
+        } else {
+          errorMessage =
+            errorData.error ||
+            errorData.message ||
+            "An error occurred during login";
+        }
+      } catch (parseError) {
+        errorMessage = (error as Error).message;
+      }
       notifications.show({
-        message: "Please check your phone number or password again",
+        message: errorMessage,
         color: "red",
         icon: <AlertCircle />,
       });
-      throw error;
+      throw new Error(errorMessage);
     }
   };
 
