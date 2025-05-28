@@ -8,6 +8,7 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { notifications } from "@mantine/notifications";
 import { AlertCircle } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 
 interface User {
   id: number;
@@ -61,8 +62,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Initialize as loading
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   const apiRequest = async (
@@ -79,18 +79,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}${url}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+      import.meta.env.VITE_API_BASE_URL || "history://localhost:3000";
+    try {
+      const response = await fetch(`${baseUrl}${url}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        credentials: "include",
+      });
 
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(JSON.stringify(data)); // Pass the entire error data as a string
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(JSON.stringify(data));
+      }
+      return data;
+    } catch (error) {
+      if (
+        error instanceof TypeError &&
+        error.message.includes("Failed to fetch")
+      ) {
+        throw new Error("Server is down or unreachable");
+      }
+      throw error;
     }
-    return data;
   };
 
   const login = async (credentials: {
@@ -102,8 +113,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const data = await apiRequest("/auth/login", "POST", credentials);
       setUser(data.data.user);
       setAccessToken(data.data.access_token);
-      setRefreshToken(data.data.refresh_token);
-      localStorage.setItem("refresh_token", data.data.refresh_token);
       localStorage.setItem("user", JSON.stringify(data.data.user));
       notifications.show({ message: "Login successful", color: "green" });
       navigate("/dashboard");
@@ -140,15 +149,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         "/auth/logout",
         "DELETE",
         null,
-        refreshToken || accessToken || undefined
+        accessToken || undefined
       );
     } catch (error) {
       console.warn("Logout failed:", (error as Error).message);
     } finally {
       setUser(null);
       setAccessToken(null);
-      setRefreshToken(null);
-      localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       notifications.show({
         message: "Logged out successfully",
@@ -167,7 +174,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       await apiRequest("/auth/customer_register", "POST", data);
       notifications.show({ message: "OTP sent successfully", color: "green" });
-      // Encode phone number to preserve "+"
       navigate(`/verify-otp?phone=${encodeURIComponent(data.phone_number)}`);
     } catch (error) {
       let errorMessage = "An error occurred during registration";
@@ -218,8 +224,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       const response = await apiRequest("/auth/verify_otp", "POST", data);
       setUser(response.data.user);
       setAccessToken(response.data.access_token);
-      setRefreshToken(response.data.refresh_token);
-      localStorage.setItem("refresh_token", response.data.refresh_token);
       localStorage.setItem("user", JSON.stringify(response.data.user));
       notifications.show({
         message: "OTP verified successfully",
@@ -300,28 +304,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const refreshAuthToken = async () => {
     setIsLoading(true);
     try {
-      const storedRefreshToken = localStorage.getItem("refresh_token");
-      if (!storedRefreshToken) {
-        throw new Error("No refresh token available");
-      }
-      const data = await apiRequest("/auth/refresh", "POST", {
-        refresh_token: storedRefreshToken,
-      });
+      const data = await apiRequest("/auth/refresh", "POST", null);
       setAccessToken(data.data.access_token);
-      setRefreshToken(data.data.refresh_token);
-      localStorage.setItem("refresh_token", data.data.refresh_token);
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         setUser(JSON.parse(storedUser));
       }
     } catch (error) {
       console.warn("Refresh token failed:", (error as Error).message);
-      if ((error as Error).message.includes("401")) {
-        localStorage.removeItem("refresh_token");
+      if (
+        (error as Error).message.includes("401") ||
+        (error as Error).message.includes("Server is down")
+      ) {
         localStorage.removeItem("user");
         setUser(null);
         setAccessToken(null);
-        setRefreshToken(null);
+        notifications.show({
+          message:
+            "Session expired or server unavailable. Please log in again.",
+          color: "red",
+          icon: <AlertCircle />,
+        });
         navigate("/login");
       }
     } finally {
@@ -329,13 +332,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
+  // Token refresh logic
   useEffect(() => {
-    const storedRefreshToken = localStorage.getItem("refresh_token");
-    if (storedRefreshToken) {
-      refreshAuthToken();
-    } else {
-      setIsLoading(false);
+    let refreshInterval: ReturnType<typeof setInterval>;
+
+    const checkAndRefreshToken = async () => {
+      if (accessToken) {
+        try {
+          const decoded: { exp: number } = jwtDecode(accessToken);
+          const currentTime = Math.floor(Date.now() / 1000);
+          const timeLeft = decoded.exp - currentTime;
+
+          // Refresh token 10 seconds before expiration
+          if (timeLeft <= 10) {
+            await refreshAuthToken();
+          }
+        } catch (error) {
+          console.warn("Token decode failed:", (error as Error).message);
+          await refreshAuthToken();
+        }
+      }
+    };
+
+    if (accessToken) {
+      // Check every 10 seconds
+      refreshInterval = setInterval(checkAndRefreshToken, 10 * 1000);
     }
+
+    return () => clearInterval(refreshInterval);
+  }, [accessToken]);
+
+  // Initial token check
+  useEffect(() => {
+    refreshAuthToken();
   }, []);
 
   return (
