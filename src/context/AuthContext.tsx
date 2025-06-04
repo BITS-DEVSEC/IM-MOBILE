@@ -1,14 +1,7 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { notifications } from "@mantine/notifications";
-import { AlertCircle } from "lucide-react";
-import { jwtDecode } from "jwt-decode";
+import { authService } from "../services/authService";
+import { useTokenRefresh } from "../hooks/useTokenRefresh";
 
 interface User {
   id: number;
@@ -65,104 +58,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
-  const apiRequest = async (
-    url: string,
-    method: string,
-    body?: string | object | null,
-    token?: string
-  ) => {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "history://localhost:3000";
-    try {
-      const response = await fetch(`${baseUrl}${url}`, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-        credentials: "include",
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(JSON.stringify(data));
-      }
-      return data;
-    } catch (error) {
-      if (
-        error instanceof TypeError &&
-        error.message.includes("Failed to fetch")
-      ) {
-        throw new Error("Server is down or unreachable");
-      }
-      throw error;
-    }
-  };
+  useTokenRefresh({ accessToken, setAccessToken, setUser, setIsLoading });
 
   const login = async (credentials: {
     email?: string;
     phone_number?: string;
     password: string;
   }) => {
-    try {
-      const data = await apiRequest("/auth/login", "POST", credentials);
-      setUser(data.data.user);
-      setAccessToken(data.data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.data.user));
-      notifications.show({ message: "Login successful", color: "green" });
-      navigate("/dashboard");
-    } catch (error) {
-      let errorMessage = "An error occurred during login";
-      try {
-        const errorData = JSON.parse((error as Error).message);
-        if (
-          errorData.error === "Unauthorized" ||
-          errorData.error === "Invalid credentials"
-        ) {
-          errorMessage = "Please check your phone number or password again";
-        } else {
-          errorMessage =
-            errorData.error ||
-            errorData.message ||
-            "An error occurred during login";
-        }
-      } catch (parseError) {
-        errorMessage = (error as Error).message;
-      }
-      notifications.show({
-        message: errorMessage,
-        color: "red",
-        icon: <AlertCircle />,
-      });
-      throw new Error(errorMessage);
-    }
+    const data = await authService.login(credentials);
+    setUser(data.data.user);
+    setAccessToken(data.data.access_token);
+    localStorage.setItem("user", JSON.stringify(data.data.user));
+    navigate("/dashboard");
   };
 
   const logout = async () => {
-    try {
-      await apiRequest(
-        "/auth/logout",
-        "DELETE",
-        null,
-        accessToken || undefined
-      );
-    } catch (error) {
-      console.warn("Logout failed:", (error as Error).message);
-    } finally {
-      setUser(null);
-      setAccessToken(null);
-      localStorage.removeItem("user");
-      notifications.show({
-        message: "Logged out successfully",
-        color: "green",
-      });
-      navigate("/login");
-    }
+    await authService.logout(accessToken);
+    setUser(null);
+    setAccessToken(null);
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   const registerCustomer = async (data: {
@@ -171,29 +86,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     password: string;
     password_confirmation: string;
   }) => {
-    try {
-      await apiRequest("/auth/customer_register", "POST", data);
-      notifications.show({ message: "OTP sent successfully", color: "green" });
-      navigate(`/verify-otp?phone=${encodeURIComponent(data.phone_number)}`);
-    } catch (error) {
-      let errorMessage = "An error occurred during registration";
-      try {
-        const errorData = JSON.parse((error as Error).message);
-        if (errorData.errors && Array.isArray(errorData.errors)) {
-          errorMessage = errorData.errors.join(", ");
-        } else if (errorData.error) {
-          errorMessage = errorData.error;
-        }
-      } catch (parseError) {
-        errorMessage = (error as Error).message;
-      }
-      notifications.show({
-        message: errorMessage,
-        color: "red",
-        icon: <AlertCircle />,
-      });
-      throw new Error(errorMessage);
-    }
+    await authService.registerCustomer(data);
+    navigate(`/verify-otp?phone=${encodeURIComponent(data.phone_number)}`);
   };
 
   const registerUser = async (data: {
@@ -202,80 +96,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     password_confirmation: string;
     role: string;
   }) => {
-    try {
-      await apiRequest("/auth/register", "POST", data);
-      notifications.show({
-        message: "Registration successful. Please verify your email.",
-        color: "green",
-      });
-      navigate("/login");
-    } catch (error) {
-      notifications.show({
-        message: (error as Error).message,
-        color: "red",
-        icon: <AlertCircle />,
-      });
-      throw error;
-    }
+    await authService.registerUser(data);
+    navigate("/login");
   };
 
   const verifyOtp = async (data: { phone_number: string; otp: string }) => {
-    try {
-      const response = await apiRequest("/auth/verify_otp", "POST", data);
-      setUser(response.data.user);
-      setAccessToken(response.data.access_token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      notifications.show({
-        message: "OTP verified successfully",
-        color: "green",
-      });
-      navigate("/dashboard");
-    } catch (error) {
-      notifications.show({
-        message: (error as Error).message,
-        color: "red",
-        icon: <AlertCircle />,
-      });
-      throw error;
-    }
+    const response = await authService.verifyOtp(data);
+    setUser(response.data.user);
+    setAccessToken(response.data.access_token);
+    localStorage.setItem("user", JSON.stringify(response.data.user));
+    navigate("/dashboard");
   };
 
   const verifyEmail = async (data: {
     email: string;
     verification_token: string;
   }) => {
-    try {
-      await apiRequest("/auth/verify_email", "POST", data);
-      notifications.show({
-        message: "Email verified successfully",
-        color: "green",
-      });
-      navigate("/login");
-    } catch (error) {
-      notifications.show({
-        message: (error as Error).message,
-        color: "red",
-        icon: <AlertCircle />,
-      });
-      throw error;
-    }
+    await authService.verifyEmail(data);
+    navigate("/login");
   };
 
   const forgotPassword = async (email: string) => {
-    try {
-      await apiRequest("/auth/forgot_password", "POST", { email });
-      notifications.show({
-        message: "Password reset instructions sent",
-        color: "green",
-      });
-    } catch (error) {
-      notifications.show({
-        message: (error as Error).message,
-        color: "red",
-        icon: <AlertCircle />,
-      });
-      throw error;
-    }
+    await authService.forgotPassword(email);
   };
 
   const resetPassword = async (data: {
@@ -284,88 +126,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     password: string;
     password_confirmation: string;
   }) => {
-    try {
-      await apiRequest("/auth/reset_password", "POST", data);
-      notifications.show({
-        message: "Password reset successfully",
-        color: "green",
-      });
-      navigate("/login");
-    } catch (error) {
-      notifications.show({
-        message: (error as Error).message,
-        color: "red",
-        icon: <AlertCircle />,
-      });
-      throw error;
-    }
+    await authService.resetPassword(data);
+    navigate("/login");
   };
 
   const refreshAuthToken = async () => {
-    setIsLoading(true);
-    try {
-      const data = await apiRequest("/auth/refresh", "POST", null);
-      setAccessToken(data.data.access_token);
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (error) {
-      console.warn("Refresh token failed:", (error as Error).message);
-      if (
-        (error as Error).message.includes("401") ||
-        (error as Error).message.includes("Server is down")
-      ) {
-        localStorage.removeItem("user");
-        setUser(null);
-        setAccessToken(null);
-        notifications.show({
-          message:
-            "Session expired or server unavailable. Please log in again.",
-          color: "red",
-          icon: <AlertCircle />,
-        });
-        navigate("/login");
-      }
-    } finally {
-      setIsLoading(false);
+    const data = await authService.refreshAuthToken();
+    setAccessToken(data.data.access_token);
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
   };
-
-  // Token refresh logic
-  useEffect(() => {
-    let refreshInterval: ReturnType<typeof setInterval>;
-
-    const checkAndRefreshToken = async () => {
-      if (accessToken) {
-        try {
-          const decoded: { exp: number } = jwtDecode(accessToken);
-          const currentTime = Math.floor(Date.now() / 1000);
-          const timeLeft = decoded.exp - currentTime;
-
-          // Refresh token 10 seconds before expiration
-          if (timeLeft <= 10) {
-            await refreshAuthToken();
-          }
-        } catch (error) {
-          console.warn("Token decode failed:", (error as Error).message);
-          await refreshAuthToken();
-        }
-      }
-    };
-
-    if (accessToken) {
-      // Check every 10 seconds
-      refreshInterval = setInterval(checkAndRefreshToken, 10 * 1000);
-    }
-
-    return () => clearInterval(refreshInterval);
-  }, [accessToken]);
-
-  // Initial token check
-  useEffect(() => {
-    refreshAuthToken();
-  }, []);
 
   return (
     <AuthContext.Provider

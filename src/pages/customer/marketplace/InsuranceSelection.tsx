@@ -5,7 +5,6 @@ import {
   Card,
   Text,
   ThemeIcon,
-  useMantineTheme,
   Modal,
   Button,
   Tabs,
@@ -13,17 +12,31 @@ import {
   Box,
   Divider,
   Loader,
+  useMantineTheme,
 } from "@mantine/core";
 import { Home, Car, Heart, Info, AlertCircle, Shield } from "lucide-react";
 import WizardButton from "../../../components/button/WizardButton";
 import { useState } from "react";
-import { useInsuranceTypes } from "../../../hooks/useInsuranceTypes";
+
+interface InsuranceType {
+  id: number;
+  name: string;
+  description: string;
+  coverage_types: {
+    id: number;
+    name: string;
+    description: string;
+  }[];
+}
 
 interface InsuranceSelectionProps {
   selectedInsurance: string;
   onSelectInsurance: (id: string) => void;
   onMotorSelected: () => void;
   onOtherSelected: (type: string) => void;
+  insuranceTypes: InsuranceType[];
+  loading: boolean;
+  error: string | null;
 }
 
 const InsuranceSelection = ({
@@ -31,6 +44,9 @@ const InsuranceSelection = ({
   onSelectInsurance,
   onMotorSelected,
   onOtherSelected,
+  insuranceTypes,
+  loading,
+  error,
 }: InsuranceSelectionProps) => {
   const theme = useMantineTheme();
   const primaryColor = theme.colors.primary[8];
@@ -40,7 +56,6 @@ const InsuranceSelection = ({
     description: string;
   } | null>(null);
   const [motorModalOpen, setMotorModalOpen] = useState(false);
-  const { insuranceTypes, loading, error } = useInsuranceTypes();
 
   const insuranceIcons: {
     [key: string]: React.ComponentType<{ size: number; color: string }>;
@@ -227,7 +242,6 @@ const InsuranceSelection = ({
         />
       </div>
 
-      {/* Modal for non-Motor Insurance */}
       <Modal
         opened={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -245,7 +259,6 @@ const InsuranceSelection = ({
         </Text>
       </Modal>
 
-      {/* Modal for Motor Insurance */}
       <Modal
         opened={motorModalOpen}
         onClose={() => setMotorModalOpen(false)}

@@ -33,12 +33,10 @@ interface QuotationRequest {
   error: string;
   id: number;
   form_data: {
-    coverage_amount: number;
     vehicle_details: {
       vehicle_type: string;
       vehicle_usage: string;
       number_of_passengers: number;
-      car_price: number;
       goods: string;
     };
     current_residence_address: {
@@ -94,7 +92,7 @@ interface QuotationRequest {
 
 const InsuranceWizard = () => {
   const { user, accessToken } = useAuth();
-  const { insuranceTypes } = useInsuranceTypes();
+  const { insuranceTypes, loading, error } = useInsuranceTypes();
   const navigate = useNavigate();
   const location = useLocation();
   const [currentStep, setCurrentStep] =
@@ -102,12 +100,10 @@ const InsuranceWizard = () => {
   const [formData, setFormData] = useState({
     insurance_type_id: 0,
     coverage_type_id: 0,
-    coverage_amount: 0,
     vehicle_details: {
       vehicle_type: "",
       vehicle_usage: "",
       number_of_passengers: 0,
-      car_price: 0,
       goods: "",
     },
     current_residence_address: {
@@ -138,7 +134,6 @@ const InsuranceWizard = () => {
   });
   const [draftId, setDraftId] = useState<number | null>(null);
 
-  // Extract draftId from URL query parameters
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const draftIdParam = params.get("draftId");
@@ -147,7 +142,6 @@ const InsuranceWizard = () => {
     }
   }, [location]);
 
-  // Fetch draft data if draftId exists
   useEffect(() => {
     const fetchDraftData = async () => {
       if (!draftId || !accessToken) return;
@@ -171,22 +165,18 @@ const InsuranceWizard = () => {
           throw new Error(data.error || "Failed to fetch draft data");
         }
 
-        // Verify the draft belongs to the current user
         if (data.user.id !== user?.id) {
           throw new Error("Unauthorized access to this draft");
         }
 
-        // Pre-fill form data with draft data
         setFormData({
           insurance_type_id: data.insurance_type.id,
           coverage_type_id: data.coverage_type.id,
-          coverage_amount: data.form_data.coverage_amount,
           vehicle_details: {
             vehicle_type: data.form_data.vehicle_details.vehicle_type,
             vehicle_usage: data.form_data.vehicle_details.vehicle_usage,
             number_of_passengers:
               data.form_data.vehicle_details.number_of_passengers,
-            car_price: data.form_data.vehicle_details.car_price,
             goods: data.form_data.vehicle_details.goods,
           },
           current_residence_address: {
@@ -216,7 +206,6 @@ const InsuranceWizard = () => {
           },
         });
 
-        // Start at the first step to allow editing
         setCurrentStep("insurance-category");
       } catch (error) {
         notifications.show({
@@ -265,7 +254,6 @@ const InsuranceWizard = () => {
       return;
     }
 
-    // Validate required fields
     const isValid = () => {
       const missingFields = [];
       if (formData.insurance_type_id <= 0)
@@ -278,8 +266,6 @@ const InsuranceWizard = () => {
         missingFields.push("vehicle_usage");
       if (formData.vehicle_details.number_of_passengers <= 0)
         missingFields.push("number_of_passengers");
-      if (formData.vehicle_details.car_price <= 0)
-        missingFields.push("car_price");
       if (!formData.current_residence_address.region)
         missingFields.push("region");
       if (!formData.current_residence_address.zone) missingFields.push("zone");
@@ -331,13 +317,11 @@ const InsuranceWizard = () => {
       insurance_type_id: formData.insurance_type_id,
       coverage_type_id: formData.coverage_type_id,
       form_data: {
-        coverage_amount: formData.coverage_amount,
         vehicle_details: {
           ...formData.vehicle_details,
           number_of_passengers: Number(
             formData.vehicle_details.number_of_passengers
           ),
-          car_price: Number(formData.vehicle_details.car_price),
         },
         current_residence_address: formData.current_residence_address,
       },
@@ -425,7 +409,7 @@ const InsuranceWizard = () => {
           : `Quotation request #${quotationId} submitted successfully!`,
         color: "green",
       });
-      navigate("/policies"); // Navigate back to LifePolicies page
+      navigate("/policies");
     } catch (error) {
       console.error("Fetch error:", error);
       notifications.show({
@@ -453,6 +437,9 @@ const InsuranceWizard = () => {
             }}
             onMotorSelected={handleMotorSelected}
             onOtherSelected={handleOtherInsuranceSelected}
+            insuranceTypes={insuranceTypes}
+            loading={loading}
+            error={error}
           />
         );
       case "motor-insurance-type":
@@ -487,14 +474,6 @@ const InsuranceWizard = () => {
               ?.coverage_types.find((c) => c.id === formData.coverage_type_id)
               ?.name.toLowerCase()
               .replace(/\s+/g, "-")}
-            compensationLimits={{ ownDamage: formData.coverage_amount }}
-            setCompensationLimits={({ ownDamage }) => {
-              console.log(`Compensation set: ${ownDamage}`);
-              setFormData((prev) => ({
-                ...prev,
-                coverage_amount: ownDamage,
-              }));
-            }}
             onNext={() => setCurrentStep("vehicle-details")}
             onBack={() => setCurrentStep("motor-insurance-type")}
           />

@@ -195,7 +195,7 @@ const VehicleDetails2 = ({
           />
 
           <TextInput
-            label="Estimated Value"
+            label="Estimated Value (Car Price in Birr)"
             placeholder="Enter estimated value"
             type="number"
             value={vehicleAttributes.estimated_value || ""}

@@ -18,7 +18,6 @@ interface VehicleDetailsProps {
       vehicle_type: string;
       vehicle_usage: string;
       number_of_passengers: number;
-      car_price: number;
       goods: string;
     };
     current_residence_address: {
@@ -33,7 +32,6 @@ interface VehicleDetailsProps {
     vehicle_type: string;
     vehicle_usage: string;
     number_of_passengers: number;
-    car_price: number;
     goods: string;
   };
   initialResidenceAddress: {
@@ -55,7 +53,6 @@ const VehicleDetails = ({
     vehicle_type: initialVehicleDetails.vehicle_type || "",
     vehicle_usage: initialVehicleDetails.vehicle_usage || "",
     number_of_passengers: initialVehicleDetails.number_of_passengers || 0,
-    car_price: initialVehicleDetails.car_price || 0,
     goods: initialVehicleDetails.goods || "",
   });
 
@@ -71,7 +68,6 @@ const VehicleDetails = ({
     vehicleDetails.vehicle_type &&
     vehicleDetails.vehicle_usage &&
     vehicleDetails.number_of_passengers > 0 &&
-    vehicleDetails.car_price > 0 &&
     vehicleDetails.goods &&
     residenceAddress.region &&
     residenceAddress.zone &&
@@ -84,7 +80,6 @@ const VehicleDetails = ({
       vehicle_details: {
         ...vehicleDetails,
         number_of_passengers: Number(vehicleDetails.number_of_passengers),
-        car_price: Number(vehicleDetails.car_price),
       },
       current_residence_address: residenceAddress,
     });
@@ -178,21 +173,8 @@ const VehicleDetails = ({
           />
 
           <TextInput
-            label="Car Price (including accessories)"
-            placeholder="Enter car price"
-            type="number"
-            value={vehicleDetails.car_price || ""}
-            onChange={(e) =>
-              setVehicleDetails((prev) => ({
-                ...prev,
-                car_price: Number(e.target.value),
-              }))
-            }
-          />
-
-          <TextInput
-            label="Goods"
-            placeholder="Enter goods details"
+            label="Carrying Capacity"
+            placeholder="Enter Carrying Capacity of your car"
             value={vehicleDetails.goods}
             onChange={(e) =>
               setVehicleDetails((prev) => ({

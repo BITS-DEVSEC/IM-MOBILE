@@ -22,12 +22,10 @@ interface Draft {
   id: number;
   status: string;
   form_data: {
-    coverage_amount: number;
     vehicle_details: {
       vehicle_type: string;
       vehicle_usage: string;
       number_of_passengers: number;
-      car_price: number;
       goods: string;
     };
     current_residence_address: {
@@ -247,10 +245,6 @@ export default function MotorPolicies() {
               <Text>{selectedDraft.coverage_type.name}</Text>
             </Box>
             <Box>
-              <Text fw={600}>Coverage Amount:</Text>
-              <Text>{selectedDraft.form_data.coverage_amount} Birr</Text>
-            </Box>
-            <Box>
               <Text fw={600}>Vehicle Details:</Text>
               <List size="sm">
                 <List.Item>
@@ -263,10 +257,7 @@ export default function MotorPolicies() {
                   Passengers:{" "}
                   {selectedDraft.form_data.vehicle_details.number_of_passengers}
                 </List.Item>
-                <List.Item>
-                  Price: {selectedDraft.form_data.vehicle_details.car_price}{" "}
-                  Birr
-                </List.Item>
+
                 <List.Item>
                   Goods: {selectedDraft.form_data.vehicle_details.goods}
                 </List.Item>
