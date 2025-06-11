@@ -10,15 +10,18 @@ import {
   ScrollArea,
   Table,
   Badge,
+  Paper,
+  Image,
+  Stack,
+  Grid,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Car, User, MapPin, Shield, Calendar } from "lucide-react";
 
 interface QuotationRequest {
   id: number;
   status: string;
   form_data: {
-    coverage_amount: number;
     vehicle_details: {
       goods: string;
       car_price: number;
@@ -83,6 +86,8 @@ const AdminDashboard: React.FC = () => {
   const [selectedQuotation, setSelectedQuotation] =
     useState<QuotationRequest | null>(null);
   const [modalOpened, setModalOpened] = useState<boolean>(false);
+  const [imageModalOpened, setImageModalOpened] = useState<boolean>(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [user, setUser] = useState<any | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
@@ -91,7 +96,6 @@ const AdminDashboard: React.FC = () => {
     const storedToken = localStorage.getItem("admin_access_token");
     if (storedUser && storedToken) {
       const parsedUser = JSON.parse(storedUser);
-      // Assume admin role if user exists, as roles may not be present
       const isAdmin = parsedUser.roles?.includes("admin") ?? true;
       if (isAdmin) {
         setUser(parsedUser);
@@ -131,7 +135,7 @@ const AdminDashboard: React.FC = () => {
       notifications.show({
         message: (error as Error).message,
         color: "red",
-        icon: <AlertCircle />,
+        icon: <AlertCircle size={20} />,
       });
     } finally {
       setLoading(false);
@@ -149,354 +153,371 @@ const AdminDashboard: React.FC = () => {
     setModalOpened(true);
   };
 
+  const openImageModal = (url: string) => {
+    setSelectedImage(url);
+    setImageModalOpened(true);
+  };
+
   if (loading) {
     return (
-      <Loader style={{ display: "flex", margin: "auto", marginTop: 100 }} />
+      <Loader
+        size="xl"
+        style={{ display: "flex", margin: "auto", marginTop: "20vh" }}
+      />
     );
   }
 
   if (!user) {
-    return <Text>You do not have permission to view this page.</Text>;
+    return (
+      <Paper p="lg" radius="md" withBorder>
+        <Text c="red" size="lg" ta="center">
+          You do not have permission to view this page.
+        </Text>
+      </Paper>
+    );
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <Title order={2} mb="lg">
+    <Stack p="xl" gap="lg">
+      <Title order={2} c="#7e4005">
         Admin Dashboard - Quotation Requests
       </Title>
       {quotations.length === 0 ? (
-        <Text>No quotation requests found.</Text>
+        <Paper p="md" radius="md" withBorder>
+          <Text c="dimmed" ta="center">
+            No quotation requests found.
+          </Text>
+        </Paper>
       ) : (
-        <Group>
+        <Grid gutter="md">
           {quotations.map((quotation) => (
-            <Card
-              key={quotation.id}
-              shadow="sm"
-              padding="lg"
-              radius="md"
-              withBorder
-              style={{ width: 300, cursor: "pointer" }}
-              onClick={() => openModal(quotation)}
-            >
-              <Text fw={500}>
-                User: {quotation.user.phone_number || quotation.user.email}
-              </Text>
-              <Text size="sm" c="dimmed">
-                Quotation ID: {quotation.id}
-              </Text>
-              <Badge
-                color={quotation.status === "draft" ? "blue" : "green"}
-                mt="sm"
+            <Grid.Col key={quotation.id} span={{ base: 12, sm: 6, md: 4 }}>
+              <Card
+                shadow="md"
+                padding="lg"
+                radius="md"
+                withBorder
+                style={{ cursor: "pointer", transition: "transform 0.2s" }}
+                onClick={() => openModal(quotation)}
+                className="hover:scale-105"
               >
-                {quotation.status}
-              </Badge>
-              <Text size="sm" mt="xs">
-                Coverage: {quotation.form_data.coverage_amount}
-              </Text>
-              <Text size="sm">Vehicle: {quotation.vehicle.plate_number}</Text>
-              <Text size="sm">
-                Created: {new Date(quotation.created_at).toLocaleDateString()}
-              </Text>
-            </Card>
+                <Stack gap="xs">
+                  <Group>
+                    <User size={20} />
+                    <Text fw={600}>
+                      {quotation.user.phone_number || quotation.user.email}
+                    </Text>
+                  </Group>
+                  <Text size="sm" c="dimmed">
+                    Quotation ID: {quotation.id}
+                  </Text>
+                  <Badge
+                    color={quotation.status === "draft" ? "blue" : "green"}
+                    variant="light"
+                  >
+                    {quotation.status}
+                  </Badge>
+                  <Group gap="xs"></Group>
+                  <Group gap="xs">
+                    <Car size={16} />
+                    <Text size="sm">
+                      Vehicle: {quotation.vehicle.plate_number}
+                    </Text>
+                  </Group>
+                  <Group gap="xs">
+                    <Calendar size={16} />
+                    <Text size="sm">
+                      Created:{" "}
+                      {new Date(quotation.created_at).toLocaleDateString()}
+                    </Text>
+                  </Group>
+                </Stack>
+              </Card>
+            </Grid.Col>
           ))}
-        </Group>
+        </Grid>
       )}
 
       <Modal
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        title="Quotation Request Details"
+        title={
+          <Title order={3} c="#7e4005">
+            Quotation Request Details
+          </Title>
+        }
         size="lg"
         scrollAreaComponent={ScrollArea.Autosize}
+        radius="md"
       >
         {selectedQuotation && (
-          <div>
-            <Title order={3}>User Information</Title>
-            <Table>
-              <tbody>
-                <tr>
-                  <td>ID</td>
-                  <td>{selectedQuotation.user.id}</td>
-                </tr>
-                <tr>
-                  <td>Email</td>
-                  <td>{selectedQuotation.user.email || "N/A"}</td>
-                </tr>
-                <tr>
-                  <td>Phone</td>
-                  <td>{selectedQuotation.user.phone_number}</td>
-                </tr>
-                <tr>
-                  <td>FIN</td>
-                  <td>{selectedQuotation.user.fin}</td>
-                </tr>
-                <tr>
-                  <td>Verified</td>
-                  <td>{selectedQuotation.user.verified ? "Yes" : "No"}</td>
-                </tr>
-                <tr>
-                  <td>Created</td>
-                  <td>
-                    {new Date(
-                      selectedQuotation.user.created_at
-                    ).toLocaleString()}
-                  </td>
-                </tr>
-              </tbody>
-            </Table>
+          <Stack gap="md">
+            <Paper p="md" radius="md" withBorder>
+              <Group mb="sm">
+                <User size={20} />
+                <Title order={4}>User Information</Title>
+              </Group>
+              <Table striped highlightOnHover>
+                <tbody>
+                  <tr>
+                    <td>ID</td>
+                    <td>{selectedQuotation.user.id}</td>
+                  </tr>
+                  <tr>
+                    <td>Email</td>
+                    <td>{selectedQuotation.user.email || "N/A"}</td>
+                  </tr>
+                  <tr>
+                    <td>Phone</td>
+                    <td>{selectedQuotation.user.phone_number}</td>
+                  </tr>
+                  <tr>
+                    <td>FIN</td>
+                    <td>{selectedQuotation.user.fin}</td>
+                  </tr>
+                  <tr>
+                    <td>Verified</td>
+                    <td>{selectedQuotation.user.verified ? "Yes" : "No"}</td>
+                  </tr>
+                  <tr>
+                    <td>Created</td>
+                    <td>
+                      {new Date(
+                        selectedQuotation.user.created_at
+                      ).toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </Table>
+            </Paper>
 
-            <Title order={3} mt="md">
-              Quotation Details
-            </Title>
-            <Table>
-              <tbody>
-                <tr>
-                  <td>ID</td>
-                  <td>{selectedQuotation.id}</td>
-                </tr>
-                <tr>
-                  <td>Status</td>
-                  <td>{selectedQuotation.id}</td>
-                </tr>
-                <tr>
-                  <td>Coverage Amount</td>
-                  <td>{selectedQuotation.form_data.coverage_amount}</td>
-                </tr>
-                <tr>
-                  <td>Created</td>
-                  <td>
-                    {new Date(selectedQuotation.created_at).toLocaleString()}
-                  </td>
-                </tr>
-              </tbody>
-            </Table>
+            <Paper p="md" radius="md" withBorder>
+              <Group mb="sm">
+                <Shield size={20} />
+                <Title order={4}>Quotation Details</Title>
+              </Group>
+              <Table striped highlightOnHover>
+                <tbody>
+                  <tr>
+                    <td>ID</td>
+                    <td>{selectedQuotation.id}</td>
+                  </tr>
+                  <tr>
+                    <td>Status</td>
+                    <td>{selectedQuotation.status}</td>
+                  </tr>
 
-            <Title order={3} mt="md">
-              Vehicle Details
-            </Title>
-            <Table>
-              <tbody>
-                <tr>
-                  <td>Plate Number</td>
-                  <td>{selectedQuotation.vehicle.plate_number}</td>
-                </tr>
-                <tr>
-                  <td>Chassis Number</td>
-                  <td>{selectedQuotation.vehicle.chassis_number}</td>
-                </tr>
-                <tr>
-                  <td>Engine Number</td>
-                  <td>{selectedQuotation.vehicle.engine_number}</td>
-                </tr>
-                <tr>
-                  <td>Year</td>
-                  <td>{selectedQuotation.vehicle.year_of_manufacture}</td>
-                </tr>
-                <tr>
-                  <td>Make</td>
-                  <td>{selectedQuotation.vehicle.make}</td>
-                </tr>
-                <tr>
-                  <td>Model</td>
-                  <td>{selectedQuotation.vehicle.model}</td>
-                </tr>
-                <tr>
-                  <td>Estimated Value</td>
-                  <td>{selectedQuotation.vehicle.estimated_value}</td>
-                </tr>
-                <tr>
-                  <td>Front View Photo</td>
-                  <td>
-                    {selectedQuotation.vehicle.front_view_photo_url ? (
-                      <a
-                        href={selectedQuotation.vehicle.front_view_photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Back View Photo</td>
-                  <td>
-                    {selectedQuotation.vehicle.back_view_photo_url ? (
-                      <a
-                        href={selectedQuotation.vehicle.back_view_photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Left View Photo</td>
-                  <td>
-                    {selectedQuotation.vehicle.left_view_photo_url ? (
-                      <a
-                        href={selectedQuotation.vehicle.left_view_photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Right View Photo</td>
-                  <td>
-                    {selectedQuotation.vehicle.right_view_photo_url ? (
-                      <a
-                        href={selectedQuotation.vehicle.right_view_photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Engine Photo</td>
-                  <td>
-                    {selectedQuotation.vehicle.engine_photo_url ? (
-                      <a
-                        href={selectedQuotation.vehicle.engine_photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Chassis Number Photo</td>
-                  <td>
-                    {selectedQuotation.vehicle.chassis_number_photo_url ? (
-                      <a
-                        href={
-                          selectedQuotation.vehicle.chassis_number_photo_url
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Libre Photo</td>
-                  <td>
-                    {selectedQuotation.vehicle.libre_photo_url ? (
-                      <a
-                        href={selectedQuotation.vehicle.libre_photo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        View
-                      </a>
-                    ) : (
-                      "N/A"
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </Table>
+                  <tr>
+                    <td>Created</td>
+                    <td>
+                      {new Date(selectedQuotation.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </Table>
+            </Paper>
 
-            <Title order={3} mt="md">
-              Residence Address
-            </Title>
-            <Table>
-              <tbody>
-                <tr>
-                  <td>Region</td>
-                  <td>
+            <Paper p="md" radius="md" withBorder>
+              <Group mb="sm">
+                <Car size={20} />
+                <Title order={4}>Vehicle Details</Title>
+              </Group>
+              <Table striped highlightOnHover>
+                <tbody>
+                  <tr>
+                    <td>Plate Number</td>
+                    <td>{selectedQuotation.vehicle.plate_number}</td>
+                  </tr>
+                  <tr>
+                    <td>Chassis Number</td>
+                    <td>{selectedQuotation.vehicle.chassis_number}</td>
+                  </tr>
+                  <tr>
+                    <td>Engine Number</td>
+                    <td>{selectedQuotation.vehicle.engine_number}</td>
+                  </tr>
+                  <tr>
+                    <td>Year</td>
+                    <td>{selectedQuotation.vehicle.year_of_manufacture}</td>
+                  </tr>
+                  <tr>
+                    <td>Make</td>
+                    <td>{selectedQuotation.vehicle.make}</td>
+                  </tr>
+                  <tr>
+                    <td>Model</td>
+                    <td>{selectedQuotation.vehicle.model}</td>
+                  </tr>
+                  <tr>
+                    <td>Estimated Value</td>
+                    <td>{selectedQuotation.vehicle.estimated_value}</td>
+                  </tr>
+                  {[
                     {
-                      selectedQuotation.form_data.current_residence_address
-                        .region
-                    }
-                  </td>
-                </tr>
-                <tr>
-                  <td>Zone</td>
-                  <td>
-                    {selectedQuotation.form_data.current_residence_address.zone}
-                  </td>
-                </tr>
-                <tr>
-                  <td>Woreda</td>
-                  <td>
+                      label: "Front View Photo",
+                      url: selectedQuotation.vehicle.front_view_photo_url,
+                    },
                     {
-                      selectedQuotation.form_data.current_residence_address
-                        .woreda
-                    }
-                  </td>
-                </tr>
-                <tr>
-                  <td>Kebele</td>
-                  <td>
+                      label: "Back View Photo",
+                      url: selectedQuotation.vehicle.back_view_photo_url,
+                    },
                     {
-                      selectedQuotation.form_data.current_residence_address
-                        .kebele
-                    }
-                  </td>
-                </tr>
-                <tr>
-                  <td>House Number</td>
-                  <td>
+                      label: "Left View Photo",
+                      url: selectedQuotation.vehicle.left_view_photo_url,
+                    },
                     {
-                      selectedQuotation.form_data.current_residence_address
-                        .house_number
-                    }
-                  </td>
-                </tr>
-              </tbody>
-            </Table>
+                      label: "Right View Photo",
+                      url: selectedQuotation.vehicle.right_view_photo_url,
+                    },
+                    {
+                      label: "Engine Photo",
+                      url: selectedQuotation.vehicle.engine_photo_url,
+                    },
+                    {
+                      label: "Chassis Number Photo",
+                      url: selectedQuotation.vehicle.chassis_number_photo_url,
+                    },
+                    {
+                      label: "Libre Photo",
+                      url: selectedQuotation.vehicle.libre_photo_url,
+                    },
+                  ].map((item) => (
+                    <tr key={item.label}>
+                      <td>{item.label}</td>
+                      <td>
+                        {item.url ? (
+                          <Button
+                            variant="subtle"
+                            size="xs"
+                            onClick={() => openImageModal(item.url as string)}
+                          >
+                            View Image
+                          </Button>
+                        ) : (
+                          "N/A"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </Paper>
 
-            <Title order={3} mt="md">
-              Insurance Details
-            </Title>
-            <Table>
-              <tbody>
-                <tr>
-                  <td>Insurance Type</td>
-                  <td>{selectedQuotation.insurance_type.name}</td>
-                </tr>
-                <tr>
-                  <td>Coverage Type</td>
-                  <td>{selectedQuotation.coverage_type.name}</td>
-                </tr>
-                <tr>
-                  <td>Coverage Description</td>
-                  <td>{selectedQuotation.coverage_type.description}</td>
-                </tr>
-              </tbody>
-            </Table>
-          </div>
+            <Paper p="md" radius="md" withBorder>
+              <Group mb="sm">
+                <MapPin size={20} />
+                <Title order={4}>Residence Address</Title>
+              </Group>
+              <Table striped highlightOnHover>
+                <tbody>
+                  <tr>
+                    <td>Region</td>
+                    <td>
+                      {
+                        selectedQuotation.form_data.current_residence_address
+                          .region
+                      }
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Zone</td>
+                    <td>
+                      {
+                        selectedQuotation.form_data.current_residence_address
+                          .zone
+                      }
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Woreda</td>
+                    <td>
+                      {
+                        selectedQuotation.form_data.current_residence_address
+                          .woreda
+                      }
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Kebele</td>
+                    <td>
+                      {
+                        selectedQuotation.form_data.current_residence_address
+                          .kebele
+                      }
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>House Number</td>
+                    <td>
+                      {
+                        selectedQuotation.form_data.current_residence_address
+                          .house_number
+                      }
+                    </td>
+                  </tr>
+                </tbody>
+              </Table>
+            </Paper>
+
+            <Paper p="md" radius="md" withBorder>
+              <Group mb="sm">
+                <Shield size={20} />
+                <Title order={4}>Insurance Details</Title>
+              </Group>
+              <Table striped highlightOnHover>
+                <tbody>
+                  <tr>
+                    <td>Insurance Type</td>
+                    <td>{selectedQuotation.insurance_type.name}</td>
+                  </tr>
+
+                  <tr>
+                    <td>Coverage Description</td>
+                    <td>{selectedQuotation.coverage_type.description}</td>
+                  </tr>
+                </tbody>
+              </Table>
+            </Paper>
+
+            <Button
+              variant="filled"
+              color="#7e4005"
+              onClick={() => setModalOpened(false)}
+              mt="md"
+            >
+              Close
+            </Button>
+          </Stack>
         )}
-        <Button onClick={() => setModalOpened(false)} mt="md">
+      </Modal>
+
+      <Modal
+        opened={imageModalOpened}
+        onClose={() => setImageModalOpened(false)}
+        title="Vehicle Image"
+        size="md"
+        centered
+      >
+        {selectedImage && (
+          <Image
+            src={selectedImage}
+            alt="Vehicle Image"
+            radius="md"
+            fit="contain"
+            style={{ maxHeight: "60vh", width: "100%" }}
+          />
+        )}
+        <Button
+          variant="filled"
+          color="#7e4005"
+          onClick={() => setImageModalOpened(false)}
+          mt="md"
+          fullWidth
+        >
           Close
         </Button>
       </Modal>
-    </div>
+    </Stack>
   );
 };
 

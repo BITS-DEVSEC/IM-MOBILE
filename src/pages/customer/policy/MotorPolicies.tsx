@@ -259,7 +259,8 @@ export default function MotorPolicies() {
                 </List.Item>
 
                 <List.Item>
-                  Goods: {selectedDraft.form_data.vehicle_details.goods}
+                  Carrying capacity (Goods):{" "}
+                  {selectedDraft.form_data.vehicle_details.goods}
                 </List.Item>
               </List>
             </Box>

@@ -95,9 +95,31 @@ const InsuranceWizard = () => {
   const { insuranceTypes, loading, error } = useInsuranceTypes();
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentStep, setCurrentStep] =
-    useState<WizardStep>("insurance-category");
-  const [formData, setFormData] = useState({
+
+  // Initialize currentStep from URL query parameter
+  const [currentStep, setCurrentStep] = useState<WizardStep>(() => {
+    const params = new URLSearchParams(location.search);
+    const step = params.get("step");
+    return step &&
+      Object.values<WizardStep>([
+        "insurance-category",
+        "motor-insurance-type",
+        "select-compensation",
+        "vehicle-details",
+        "vehicle-details-2",
+        "car-photos",
+        "compare-quotes",
+        "home-insurance-type",
+        "home-insurance-options",
+        "life-insurance-type",
+        "life-insurance-options",
+      ]).includes(step as WizardStep)
+      ? (step as WizardStep)
+      : "insurance-category";
+  });
+
+  // Initialize formData from localStorage or default
+  const defaultFormData = {
     insurance_type_id: 0,
     coverage_type_id: 0,
     vehicle_details: {
@@ -123,25 +145,70 @@ const InsuranceWizard = () => {
       estimated_value: 0,
     },
     car_photos: {
-      front: null as File | null,
-      back: null as File | null,
-      left: null as File | null,
-      right: null as File | null,
-      engine: null as File | null,
-      chassis_number: null as File | null,
-      libre: null as File | null,
+      front: null,
+      back: null,
+      left: null,
+      right: null,
+      engine: null,
+      chassis_number: null,
+      libre: null,
     },
+  };
+
+  const [formData, setFormData] = useState(() => {
+    const savedFormData = localStorage.getItem("insuranceWizardFormData");
+    return savedFormData
+      ? {
+          ...defaultFormData,
+          ...JSON.parse(savedFormData),
+          car_photos: defaultFormData.car_photos,
+        }
+      : defaultFormData;
   });
+
   const [draftId, setDraftId] = useState<number | null>(null);
 
+  // Reset formData when navigating to insurance-category
+  useEffect(() => {
+    if (currentStep === "insurance-category") {
+      setFormData(defaultFormData);
+      setDraftId(null);
+      localStorage.removeItem("insuranceWizardFormData");
+    }
+  }, [currentStep]);
+
+  // Update URL with currentStep and draftId
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    params.set("step", currentStep);
+    if (draftId) params.set("draftId", draftId.toString());
+    else params.delete("draftId");
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  }, [currentStep, draftId, navigate, location.pathname]);
+
+  // Persist formData to localStorage, excluding car_photos
+  useEffect(() => {
+    if (currentStep !== "insurance-category") {
+      const { car_photos, ...dataToSave } = formData;
+      localStorage.setItem(
+        "insuranceWizardFormData",
+        JSON.stringify(dataToSave)
+      );
+    }
+  }, [formData, currentStep]);
+
+  // Load draftId from URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const draftIdParam = params.get("draftId");
     if (draftIdParam) {
       setDraftId(Number(draftIdParam));
+    } else {
+      setDraftId(null);
     }
   }, [location]);
 
+  // Fetch draft data
   useEffect(() => {
     const fetchDraftData = async () => {
       if (!draftId || !accessToken) return;
@@ -169,7 +236,7 @@ const InsuranceWizard = () => {
           throw new Error("Unauthorized access to this draft");
         }
 
-        setFormData({
+        const updatedFormData = {
           insurance_type_id: data.insurance_type.id,
           coverage_type_id: data.coverage_type.id,
           vehicle_details: {
@@ -196,17 +263,36 @@ const InsuranceWizard = () => {
             estimated_value: Number(data.vehicle.estimated_value),
           },
           car_photos: {
-            front: null,
-            back: null,
-            left: null,
-            right: null,
-            engine: null,
-            chassis_number: null,
-            libre: null,
+            front: data.vehicle.front_view_photo_url
+              ? data.vehicle.front_view_photo_url
+              : null,
+            back: data.vehicle.back_view_photo_url
+              ? data.vehicle.back_view_photo_url
+              : null,
+            left: data.vehicle.left_view_photo_url
+              ? data.vehicle.left_view_photo_url
+              : null,
+            right: data.vehicle.right_view_photo_url
+              ? data.vehicle.right_view_photo_url
+              : null,
+            engine: data.vehicle.engine_photo_url
+              ? data.vehicle.engine_photo_url
+              : null,
+            chassis_number: data.vehicle.chassis_number_photo_url
+              ? data.vehicle.chassis_number_photo_url
+              : null,
+            libre: data.vehicle.libre_photo_url
+              ? data.vehicle.libre_photo_url
+              : null,
           },
-        });
+        };
 
-        setCurrentStep("insurance-category");
+        setFormData(updatedFormData);
+        const { car_photos, ...dataToSave } = updatedFormData;
+        localStorage.setItem(
+          "insuranceWizardFormData",
+          JSON.stringify(dataToSave)
+        );
       } catch (error) {
         notifications.show({
           message: (error as Error).message || "Failed to load draft data",
@@ -220,41 +306,36 @@ const InsuranceWizard = () => {
   }, [draftId, accessToken, user?.id]);
 
   const handleMotorSelected = () => {
-    console.log("Motor selected, moving to motor-insurance-type");
     setCurrentStep("motor-insurance-type");
   };
 
   const handleOtherInsuranceSelected = (type: string) => {
-    console.log(`Other insurance selected: ${type}`);
     const insuranceType = insuranceTypes.find(
       (t) => t.name.toLowerCase() === type
     );
     if (insuranceType) {
-      setFormData((prev) => ({
+      setFormData((prev: any) => ({
         ...prev,
         insurance_type_id: insuranceType.id,
       }));
       if (type === "home") setCurrentStep("home-insurance-type");
       else if (type === "life") setCurrentStep("life-insurance-type");
-    } else {
-      console.error(`Insurance type ${type} not found`);
     }
   };
 
-  const submitQuotationRequest = async () => {
-    console.log("submitQuotationRequest called");
-
+  const submitQuotationRequest = async (isDraft: boolean = false) => {
     if (!user || !accessToken) {
-      console.error("User or accessToken missing", { user, accessToken });
       notifications.show({
         message: "You must be logged in to submit a quotation request",
         color: "red",
         icon: <AlertCircle />,
       });
-      return;
+      return null;
     }
 
+    // Validation only for final submission, not for draft
     const isValid = () => {
+      if (isDraft) return true; // Skip validation for drafts
       const missingFields = [];
       if (formData.insurance_type_id <= 0)
         missingFields.push("insurance_type_id");
@@ -296,20 +377,19 @@ const InsuranceWizard = () => {
       }
 
       if (missingFields.length > 0) {
-        console.error("Validation failed, missing fields:", missingFields);
         return false;
       }
       return true;
     };
 
-    if (!isValid()) {
+    if (!isDraft && !isValid()) {
       notifications.show({
         message:
           "Please complete all required fields and upload at least one of front, chassis number, or libre photo",
         color: "red",
         icon: <AlertCircle />,
       });
-      return;
+      return null;
     }
 
     const payload = {
@@ -334,8 +414,6 @@ const InsuranceWizard = () => {
       },
     };
 
-    console.log("Payload prepared:", payload);
-
     const formDataToSend = new FormData();
     formDataToSend.append("payload", JSON.stringify(payload));
 
@@ -349,24 +427,12 @@ const InsuranceWizard = () => {
       libre: "libre_photo",
     };
 
-    Object.entries(formData.car_photos).forEach(([key, file]) => {
-      if (file) {
+    Object.entries(formData.car_photos).forEach(([key, value]) => {
+      if (value instanceof File) {
         const fieldName = `vehicle_attributes[${photoFieldMap[key]}]`;
-        console.log(
-          `Appending photo: ${fieldName}, file: ${file.name}, size: ${file.size} bytes`
-        );
-        formDataToSend.append(fieldName, file, file.name);
-      } else {
-        console.log(`No photo for ${key}`);
+        formDataToSend.append(fieldName, value, value.name);
       }
     });
-
-    for (const [key, value] of formDataToSend.entries()) {
-      console.log(
-        `FormData entry: ${key} =`,
-        value instanceof File ? `File: ${value.name}` : value
-      );
-    }
 
     try {
       const baseUrl =
@@ -376,7 +442,6 @@ const InsuranceWizard = () => {
         : `${baseUrl}/quotation_requests/`;
       const method = draftId ? "PATCH" : "POST";
 
-      console.log(`Sending fetch request to ${url} with method ${method}`);
       const response = await fetch(url, {
         method,
         headers: {
@@ -385,15 +450,8 @@ const InsuranceWizard = () => {
         body: formDataToSend,
       });
 
-      console.log(
-        "Fetch response received:",
-        response.status,
-        response.statusText
-      );
-
       const data = await response.json();
       if (!response.ok) {
-        console.error("Response error:", data);
         throw new Error(
           data.errors
             ? data.errors.join(", ")
@@ -401,36 +459,41 @@ const InsuranceWizard = () => {
         );
       }
 
-      console.log("Quotation request successful:", data);
       const quotationId = data.id;
+      setDraftId(quotationId);
       notifications.show({
-        message: draftId
+        message: isDraft
+          ? `Draft #${quotationId} saved successfully!`
+          : draftId
           ? `Quotation request #${quotationId} updated successfully!`
           : `Quotation request #${quotationId} submitted successfully!`,
         color: "green",
       });
-      navigate("/policies");
+
+      if (!isDraft) {
+        localStorage.removeItem("insuranceWizardFormData");
+        navigate("/policies");
+      }
+      return quotationId;
     } catch (error) {
-      console.error("Fetch error:", error);
       notifications.show({
         message:
           (error as Error).message || "Failed to submit quotation request",
         color: "red",
         icon: <AlertCircle />,
       });
+      return null;
     }
   };
 
   const renderStep = () => {
-    console.log(`Rendering step: ${currentStep}`);
     switch (currentStep) {
       case "insurance-category":
         return (
           <InsuranceSelection
             selectedInsurance={formData.insurance_type_id.toString()}
             onSelectInsurance={(id) => {
-              console.log(`Insurance selected: ${id}`);
-              setFormData((prev) => ({
+              setFormData((prev: any) => ({
                 ...prev,
                 insurance_type_id: parseInt(id),
               }));
@@ -447,20 +510,17 @@ const InsuranceWizard = () => {
           <StepSelectInsurance
             insuranceCategory={formData.insurance_type_id.toString()}
             setInsuranceType={(type) => {
-              console.log(`Coverage type selected: ${type}`);
               const coverage = insuranceTypes
                 .find((t) => t.id === formData.insurance_type_id)
                 ?.coverage_types.find(
                   (c) => c.name.toLowerCase().replace(/\s+/g, "-") === type
                 );
               if (coverage) {
-                setFormData((prev) => ({
+                setFormData((prev: any) => ({
                   ...prev,
                   coverage_type_id: coverage.id,
                 }));
                 setCurrentStep("select-compensation");
-              } else {
-                console.error(`Coverage type ${type} not found`);
               }
             }}
             onBack={() => setCurrentStep("insurance-category")}
@@ -483,18 +543,22 @@ const InsuranceWizard = () => {
           <VehicleDetails
             onBack={() => setCurrentStep("select-compensation")}
             onNext={(details) => {
-              console.log("Vehicle details submitted:", details);
-              setFormData((prev) => ({
-                ...prev,
-                vehicle_details: {
-                  ...prev.vehicle_details,
-                  ...details.vehicle_details,
-                },
-                current_residence_address: {
-                  ...prev.current_residence_address,
-                  ...details.current_residence_address,
-                },
-              }));
+              setFormData(
+                (prev: {
+                  vehicle_details: any;
+                  current_residence_address: any;
+                }) => ({
+                  ...prev,
+                  vehicle_details: {
+                    ...prev.vehicle_details,
+                    ...details.vehicle_details,
+                  },
+                  current_residence_address: {
+                    ...prev.current_residence_address,
+                    ...details.current_residence_address,
+                  },
+                })
+              );
               setCurrentStep("vehicle-details-2");
             }}
             initialVehicleDetails={formData.vehicle_details}
@@ -506,8 +570,7 @@ const InsuranceWizard = () => {
           <VehicleDetails2
             onBack={() => setCurrentStep("vehicle-details")}
             onNext={(attributes) => {
-              console.log("Vehicle attributes submitted:", attributes);
-              setFormData((prev) => ({
+              setFormData((prev: { vehicle_attributes: any }) => ({
                 ...prev,
                 vehicle_attributes: {
                   ...prev.vehicle_attributes,
@@ -524,8 +587,7 @@ const InsuranceWizard = () => {
           <StepUploadCarPhotos
             carPhotos={formData.car_photos}
             setCarPhotos={(photos) => {
-              console.log("Car photos updated:", photos);
-              setFormData((prev) => ({
+              setFormData((prev: { car_photos: any }) => ({
                 ...prev,
                 car_photos: {
                   ...prev.car_photos,
@@ -534,11 +596,7 @@ const InsuranceWizard = () => {
               }));
             }}
             onBack={() => setCurrentStep("vehicle-details-2")}
-            onNext={() => {
-              console.log("Moving to compare-quotes and submitting request");
-              setCurrentStep("compare-quotes");
-              submitQuotationRequest();
-            }}
+            onNext={() => submitQuotationRequest(true)} // Save draft
           />
         );
       case "compare-quotes":
@@ -550,14 +608,13 @@ const InsuranceWizard = () => {
           <StepSelectInsurance
             insuranceCategory="2"
             setInsuranceType={(type) => {
-              console.log(`Home coverage type selected: ${type}`);
               const coverage = insuranceTypes
                 .find((t) => t.id === 2)
                 ?.coverage_types.find(
                   (c) => c.name.toLowerCase().replace(/\s+/g, "-") === type
                 );
               if (coverage) {
-                setFormData((prev) => ({
+                setFormData((prev: any) => ({
                   ...prev,
                   coverage_type_id: coverage.id,
                 }));
@@ -579,7 +636,6 @@ const InsuranceWizard = () => {
             }
             onBack={() => setCurrentStep("home-insurance-type")}
             onNext={() => {
-              console.log("Submitting home insurance request");
               setCurrentStep("compare-quotes");
               submitQuotationRequest();
             }}
@@ -590,14 +646,13 @@ const InsuranceWizard = () => {
           <StepSelectInsurance
             insuranceCategory="3"
             setInsuranceType={(type) => {
-              console.log(`Life coverage type selected: ${type}`);
               const coverage = insuranceTypes
                 .find((t) => t.id === 3)
                 ?.coverage_types.find(
                   (c) => c.name.toLowerCase().replace(/\s+/g, "-") === type
                 );
               if (coverage) {
-                setFormData((prev) => ({
+                setFormData((prev: any) => ({
                   ...prev,
                   coverage_type_id: coverage.id,
                 }));
@@ -619,14 +674,12 @@ const InsuranceWizard = () => {
             }
             onBack={() => setCurrentStep("life-insurance-type")}
             onNext={() => {
-              console.log("Submitting life insurance request");
               setCurrentStep("compare-quotes");
               submitQuotationRequest();
             }}
           />
         );
       default:
-        console.error(`Unknown step: ${currentStep}`);
         return null;
     }
   };
