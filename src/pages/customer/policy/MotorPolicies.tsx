@@ -13,7 +13,6 @@ import {
   Loader,
 } from "@mantine/core";
 import { Car, AlertCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { notifications } from "@mantine/notifications";
@@ -47,10 +46,29 @@ interface Draft {
     created_at: string;
     updated_at: string;
   };
-  insurance_type: {
+  insurance_product: {
     id: number;
+    insurer_id: number;
+    coverage_type_id: number;
     name: string;
     description: string;
+    estimated_price: string;
+    customer_rating: number | null;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    insurer: {
+      id: number;
+      user_id: number;
+      name: string;
+      description: string;
+      api_endpoint: string;
+      api_key: string;
+      contact_email: string;
+      contact_phone: string;
+      created_at: string;
+      updated_at: string;
+    };
   };
   coverage_type: {
     id: number;
@@ -85,7 +103,6 @@ interface DraftResponse {
 }
 
 export default function MotorPolicies() {
-  const navigate = useNavigate();
   const { accessToken } = useAuth();
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [draftsLoading, setDraftsLoading] = useState(false);
@@ -141,10 +158,19 @@ export default function MotorPolicies() {
     setDraftModalOpen(true);
   };
 
-  const handleEditDraft = () => {
-    if (selectedDraft) {
-      navigate(`/insurance-wizard?draftId=${selectedDraft.id}`);
-      setDraftModalOpen(false);
+  // Function to determine badge color based on status
+  const getStatusBadgeColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "draft":
+        return "gray";
+      case "submitted":
+        return "blue";
+      case "expired":
+        return "red";
+      case "active":
+        return "green";
+      default:
+        return "gray";
     }
   };
 
@@ -211,9 +237,18 @@ export default function MotorPolicies() {
                         {draft.vehicle.plate_number} •{" "}
                         {draft.coverage_type.name}
                       </Text>
+                      <Text size="sm" c="teal.6" fw={500}>
+                        {draft.insurance_product.insurer.name}
+                      </Text>
                     </div>
                   </div>
-                  <Badge color="gray.4">Draft</Badge>
+                  <Badge
+                    color={getStatusBadgeColor(draft.status)}
+                    variant="light"
+                  >
+                    {draft.status.charAt(0).toUpperCase() +
+                      draft.status.slice(1)}
+                  </Badge>
                 </div>
               </Card>
             ))
@@ -225,7 +260,7 @@ export default function MotorPolicies() {
       <Modal
         opened={draftModalOpen}
         onClose={() => setDraftModalOpen(false)}
-        title={`Draft #${selectedDraft?.id}`}
+        title={`Policy #${selectedDraft?.id}`}
         centered
         size="lg"
         overlayProps={{
@@ -237,12 +272,26 @@ export default function MotorPolicies() {
         {selectedDraft && (
           <Stack gap="md">
             <Box>
-              <Text fw={600}>Insurance Type:</Text>
-              <Text>{selectedDraft.insurance_type.name}</Text>
+              <Text fw={600}>Insurer:</Text>
+              <Text>{selectedDraft.insurance_product.insurer.name}</Text>
+            </Box>
+            <Box>
+              <Text fw={600}>Insurance Product:</Text>
+              <Text>{selectedDraft.insurance_product.name}</Text>
             </Box>
             <Box>
               <Text fw={600}>Coverage Type:</Text>
               <Text>{selectedDraft.coverage_type.name}</Text>
+            </Box>
+            <Box>
+              <Text fw={600}>Status:</Text>
+              <Badge
+                color={getStatusBadgeColor(selectedDraft.status)}
+                variant="light"
+              >
+                {selectedDraft.status.charAt(0).toUpperCase() +
+                  selectedDraft.status.slice(1)}
+              </Badge>
             </Box>
             <Box>
               <Text fw={600}>Vehicle Details:</Text>
@@ -257,7 +306,6 @@ export default function MotorPolicies() {
                   Passengers:{" "}
                   {selectedDraft.form_data.vehicle_details.number_of_passengers}
                 </List.Item>
-
                 <List.Item>
                   Carrying capacity (Goods):{" "}
                   {selectedDraft.form_data.vehicle_details.goods}
@@ -313,8 +361,8 @@ export default function MotorPolicies() {
                 </List.Item>
               </List>
             </Box>
-            <Button fullWidth onClick={handleEditDraft}>
-              Edit Draft
+            <Button fullWidth onClick={() => setDraftModalOpen(false)}>
+              Close
             </Button>
           </Stack>
         )}

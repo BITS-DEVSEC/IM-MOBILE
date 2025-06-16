@@ -323,7 +323,7 @@ const InsuranceWizard = () => {
     }
   };
 
-  const submitQuotationRequest = async (isDraft: boolean = false) => {
+  const submitQuotationRequest = async (productId?: number) => {
     if (!user || !accessToken) {
       notifications.show({
         message: "You must be logged in to submit a quotation request",
@@ -333,9 +333,8 @@ const InsuranceWizard = () => {
       return null;
     }
 
-    // Validation only for final submission, not for draft
+    // Validation for submission
     const isValid = () => {
-      if (isDraft) return true; // Skip validation for drafts
       const missingFields = [];
       if (formData.insurance_type_id <= 0)
         missingFields.push("insurance_type_id");
@@ -382,7 +381,7 @@ const InsuranceWizard = () => {
       return true;
     };
 
-    if (!isDraft && !isValid()) {
+    if (!isValid()) {
       notifications.show({
         message:
           "Please complete all required fields and upload at least one of front, chassis number, or libre photo",
@@ -396,6 +395,8 @@ const InsuranceWizard = () => {
       user_id: user.id,
       insurance_type_id: formData.insurance_type_id,
       coverage_type_id: formData.coverage_type_id,
+      insurance_product_id: productId,
+      status: "submitted", // Explicitly set status to "submitted"
       form_data: {
         vehicle_details: {
           ...formData.vehicle_details,
@@ -462,18 +463,14 @@ const InsuranceWizard = () => {
       const quotationId = data.id;
       setDraftId(quotationId);
       notifications.show({
-        message: isDraft
-          ? `Draft #${quotationId} saved successfully!`
-          : draftId
+        message: draftId
           ? `Quotation request #${quotationId} updated successfully!`
           : `Quotation request #${quotationId} submitted successfully!`,
         color: "green",
       });
 
-      if (!isDraft) {
-        localStorage.removeItem("insuranceWizardFormData");
-        navigate("/policies");
-      }
+      localStorage.removeItem("insuranceWizardFormData");
+      navigate("/policies");
       return quotationId;
     } catch (error) {
       notifications.show({
@@ -596,12 +593,18 @@ const InsuranceWizard = () => {
               }));
             }}
             onBack={() => setCurrentStep("vehicle-details-2")}
-            onNext={() => submitQuotationRequest(true)} // Save draft
+            onNext={() => setCurrentStep("compare-quotes")} // Changed to navigate to compare-quotes
           />
         );
       case "compare-quotes":
         return (
-          <StepCompareQuotes onBack={() => setCurrentStep("car-photos")} />
+          <StepCompareQuotes
+            onBack={() => setCurrentStep("car-photos")}
+            onGetQuote={(_isDraft, productId) =>
+              submitQuotationRequest(productId)
+            }
+            formData={formData} // Pass formData if needed
+          />
         );
       case "home-insurance-type":
         return (

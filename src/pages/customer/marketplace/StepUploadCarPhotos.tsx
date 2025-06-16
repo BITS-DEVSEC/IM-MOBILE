@@ -264,7 +264,7 @@ export default function StepUploadCarPhotos({
             }
           />
           <Button onClick={onNext} disabled={!termsAgreed}>
-            Save Draft
+            Next
           </Button>
         </Group>
       </ScrollArea>
