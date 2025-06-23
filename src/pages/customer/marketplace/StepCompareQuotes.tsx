@@ -4,7 +4,7 @@ import {
   Title,
   Group,
   Avatar,
-  Badge,
+  // Badge,
   Stack,
   Box,
   Loader,
@@ -128,11 +128,11 @@ export default function StepCompareQuotes({
     return stars;
   };
 
-  const getTag = (index: number) => {
-    if (index === 0) return { label: "Best Value", color: "teal" };
-    if (index === 1) return { label: "Popular", color: "blue" };
-    return null;
-  };
+  // const getTag = (index: number) => {
+  //   if (index === 0) return { label: "Best Value", color: "teal" };
+  //   if (index === 1) return { label: "Popular", color: "blue" };
+  //   return null;
+  // };
 
   const handleGetQuote = async (productId: number) => {
     setQuoteLoading((prev) => ({ ...prev, [productId]: true }));
@@ -209,8 +209,8 @@ export default function StepCompareQuotes({
         </Text>
 
         <Stack gap="md" style={{ marginTop: "1.5rem" }}>
-          {insuranceProducts.map((product, index) => {
-            const tag = getTag(index);
+          {insuranceProducts.map((product) => {
+            // const tag = getTag(index);
             return (
               <Card
                 key={product.id}
@@ -236,6 +236,7 @@ export default function StepCompareQuotes({
                     gap: "0.75rem",
                   }}
                 >
+                  {" "}
                   <Avatar
                     src={product.insurer.logo_url}
                     alt={`${product.insurer.name} logo`}
@@ -244,8 +245,16 @@ export default function StepCompareQuotes({
                     style={{
                       border: "1px solid #e2e8f0",
                       backgroundColor: "white",
-                      padding: "0.5rem",
+                      padding: "0.25rem",
                       overflow: "hidden",
+                    }}
+                    styles={{
+                      image: {
+                        objectFit: "contain",
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "50%",
+                      },
                     }}
                   >
                     {product.insurer.name.charAt(0)}
@@ -274,11 +283,11 @@ export default function StepCompareQuotes({
                       Rating {product.customer_rating || "N/A"}/5
                     </Text>
                   </Group>
-                  {tag && (
+                  {/* {tag && (
                     <Badge color={tag.color} variant="light">
                       {tag.label}
                     </Badge>
-                  )}
+                  )} */}
                 </Group>
                 <Text
                   size="sm"

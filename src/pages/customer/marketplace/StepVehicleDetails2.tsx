@@ -41,16 +41,38 @@ const VehicleDetails2 = ({
   onNext,
   initialVehicleAttributes,
 }: VehicleDetails2Props) => {
-  const [vehicleAttributes, setVehicleAttributes] = useState({
-    plate_number: initialVehicleAttributes.plate_number || "",
-    chassis_number: initialVehicleAttributes.chassis_number || "",
-    engine_number: initialVehicleAttributes.engine_number || "",
-    make: initialVehicleAttributes.make || "",
-    model: initialVehicleAttributes.model || "",
-    year_of_manufacture:
-      initialVehicleAttributes.year_of_manufacture || undefined,
-    estimated_value: initialVehicleAttributes.estimated_value || 0,
+  const [vehicleAttributes, setVehicleAttributes] = useState(() => {
+    // Parse existing plate number to extract prefix and number
+    const existingPlateNumber = initialVehicleAttributes.plate_number || "";
+    const plateMatch = existingPlateNumber.match(/^([A-Z]{2})-(.*)$/);
+
+    return {
+      plate_number: plateMatch ? plateMatch[2] : existingPlateNumber,
+      plate_prefix: plateMatch ? plateMatch[1] : "AA",
+      chassis_number: initialVehicleAttributes.chassis_number || "",
+      engine_number: initialVehicleAttributes.engine_number || "",
+      make: initialVehicleAttributes.make || "",
+      model: initialVehicleAttributes.model || "",
+      year_of_manufacture:
+        initialVehicleAttributes.year_of_manufacture || undefined,
+      estimated_value: initialVehicleAttributes.estimated_value || 0,
+    };
   });
+
+  const plateNumberPrefixes = [
+    "AA",
+    "AF",
+    "AM",
+    "OR",
+    "SO",
+    "SN",
+    "GA",
+    "BG",
+    "HA",
+    "DD",
+    "SD",
+    "SW",
+  ];
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: currentYear - 1950 + 1 }, (_, i) =>
@@ -67,11 +89,11 @@ const VehicleDetails2 = ({
     vehicleAttributes.year_of_manufacture >= 1950 &&
     vehicleAttributes.year_of_manufacture <= currentYear &&
     vehicleAttributes.estimated_value > 0;
-
   const handleNext = () => {
     if (!isFormValid) return;
     onNext({
       ...vehicleAttributes,
+      plate_number: `${vehicleAttributes.plate_prefix}${vehicleAttributes.plate_number}`,
       year_of_manufacture: Number(vehicleAttributes.year_of_manufacture),
       estimated_value: Number(vehicleAttributes.estimated_value),
     });
@@ -93,7 +115,6 @@ const VehicleDetails2 = ({
         >
           Additional Vehicle Details
         </Title>
-
         <Alert
           variant="light"
           color="primary"
@@ -105,20 +126,53 @@ const VehicleDetails2 = ({
             You can find all these details on your car's registration document
             (Libre).
           </Text>
-        </Alert>
-
+        </Alert>{" "}
         <Stack gap="lg" pb="xl">
-          <TextInput
-            label="Plate Number"
-            placeholder="Enter plate number"
-            value={vehicleAttributes.plate_number}
-            onChange={(e) =>
-              setVehicleAttributes((prev) => ({
-                ...prev,
-                plate_number: e.target.value,
-              }))
-            }
-          />
+          <Box>
+            <Text size="sm" fw={500} mb={5}>
+              Plate Number
+            </Text>
+            <Group gap={0}>
+              <Select
+                data={plateNumberPrefixes}
+                value={vehicleAttributes.plate_prefix}
+                onChange={(value) =>
+                  setVehicleAttributes((prev) => ({
+                    ...prev,
+                    plate_prefix: value || "AA",
+                  }))
+                }
+                styles={{
+                  input: {
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    borderRight: 0,
+                    width: "80px",
+                    textAlign: "center",
+                  },
+                }}
+                comboboxProps={{ withinPortal: true }}
+              />
+              <TextInput
+                placeholder="A12345"
+                value={vehicleAttributes.plate_number}
+                onChange={(e) =>
+                  setVehicleAttributes((prev) => ({
+                    ...prev,
+                    plate_number: e.target.value,
+                  }))
+                }
+                styles={{
+                  input: {
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    flex: 1,
+                  },
+                }}
+                style={{ flex: 1 }}
+              />
+            </Group>
+          </Box>
 
           <TextInput
             label="Chassis Number"
@@ -207,7 +261,6 @@ const VehicleDetails2 = ({
             }
           />
         </Stack>
-
         <Group grow p="md" style={{ flexShrink: 0 }}>
           <WizardButton
             variant="next"
