@@ -5,119 +5,53 @@ import {
   SimpleGrid,
   Container,
   Box,
-  Modal,
-  Button,
-  Stack,
-  List,
   Badge,
   Loader,
 } from "@mantine/core";
 import { Car, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { notifications } from "@mantine/notifications";
 
-interface Draft {
+interface Policy {
   id: number;
   status: string;
-  form_data: {
-    vehicle_details: {
-      vehicle_type: string;
-      vehicle_usage: string;
-      number_of_passengers: number;
-      goods: string;
-    };
-    current_residence_address: {
-      region: string;
-      zone: string;
-      woreda: string;
-      kebele: string;
-      house_number: string;
-    };
-  };
-  created_at: string;
-  updated_at: string;
-  user: {
-    id: number;
-    email: string | null;
-    verified: boolean;
-    phone_number: string;
-    fin: string;
-    created_at: string;
-    updated_at: string;
+  request_summary: {
+    entity_summary: string;
+    request_type: string;
   };
   insurance_product: {
-    id: number;
-    insurer_id: number;
-    coverage_type_id: number;
     name: string;
-    description: string;
-    estimated_price: string;
-    customer_rating: number | null;
-    status: string;
-    created_at: string;
-    updated_at: string;
-    insurer: {
-      id: number;
-      user_id: number;
+    coverage_type: {
       name: string;
-      description: string;
-      api_endpoint: string;
-      api_key: string;
-      contact_email: string;
-      contact_phone: string;
-      created_at: string;
-      updated_at: string;
     };
   };
   coverage_type: {
-    id: number;
-    insurance_type_id: number;
     name: string;
-    description: string;
-    created_at: string;
-    updated_at: string;
-  };
-  vehicle: {
-    id: number;
-    plate_number: string;
-    chassis_number: string;
-    engine_number: string;
-    year_of_manufacture: number;
-    make: string;
-    model: string;
-    estimated_value: string;
-    front_view_photo_url: string | null;
-    back_view_photo_url: string | null;
-    left_view_photo_url: string | null;
-    right_view_photo_url: string | null;
-    engine_photo_url: string | null;
-    chassis_number_photo_url: string | null;
-    libre_photo_url: string | null;
   };
 }
 
-interface DraftResponse {
+interface PolicyResponse {
   success: boolean;
-  data: Draft[];
+  data: Policy[];
 }
 
 export default function MotorPolicies() {
   const { accessToken } = useAuth();
-  const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [draftsLoading, setDraftsLoading] = useState(false);
-  const [draftModalOpen, setDraftModalOpen] = useState(false);
-  const [selectedDraft, setSelectedDraft] = useState<Draft | null>(null);
+  const navigate = useNavigate();
+  const [policies, setPolicies] = useState<Policy[]>([]);
+  const [policiesLoading, setPoliciesLoading] = useState(false);
 
-  // Fetch drafts
+  // Fetch policies
   useEffect(() => {
-    const fetchDrafts = async () => {
+    const fetchPolicies = async () => {
       if (!accessToken) {
-        console.log("No accessToken, skipping draft fetch");
+        console.log("No accessToken, skipping policy fetch");
         return;
       }
 
-      setDraftsLoading(true);
+      setPoliciesLoading(true);
       try {
         const baseUrl =
           import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
@@ -129,40 +63,40 @@ export default function MotorPolicies() {
           },
         });
 
-        const responseData: DraftResponse = await response.json();
-        console.log("Fetched drafts response:", responseData);
+        const responseData: PolicyResponse = await response.json();
+        console.log("Fetched policies response:", responseData);
 
         if (!response.ok || !responseData.success) {
-          throw new Error("Failed to fetch drafts");
+          throw new Error("Failed to fetch policies");
         }
 
-        console.log("Setting drafts:", responseData.data);
-        setDrafts(responseData.data);
+        console.log("Setting policies:", responseData.data);
+        setPolicies(responseData.data);
       } catch (error) {
-        console.error("Error fetching drafts:", error);
+        console.error("Error fetching policies:", error);
         notifications.show({
-          message: (error as Error).message || "Failed to load drafts",
+          message: (error as Error).message || "Failed to load policies",
           color: "red",
           icon: <AlertCircle />,
         });
       } finally {
-        setDraftsLoading(false);
+        setPoliciesLoading(false);
       }
     };
 
-    fetchDrafts();
+    fetchPolicies();
   }, [accessToken]);
 
-  const handleDraftClick = (draft: Draft) => {
-    setSelectedDraft(draft);
-    setDraftModalOpen(true);
+  const handlePolicyClick = (policyId: number) => {
+    navigate(`/policies/motor/${policyId}`);
   };
 
   // Function to determine badge color based on status
   const getStatusBadgeColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "draft":
-        return "gray";
+      case "pending":
+        return "yellow";
       case "submitted":
         return "blue";
       case "expired":
@@ -174,7 +108,7 @@ export default function MotorPolicies() {
     }
   };
 
-  if (draftsLoading) {
+  if (policiesLoading) {
     return (
       <Box
         style={{
@@ -197,20 +131,20 @@ export default function MotorPolicies() {
         </Title>
 
         <SimpleGrid cols={1} spacing="md">
-          {/* Draft Cards */}
-          {drafts.length === 0 ? (
+          {/* Policy Cards */}
+          {policies.length === 0 ? (
             <Text c="dimmed" ta="center">
-              No drafts available
+              No policies available
             </Text>
           ) : (
-            drafts.map((draft) => (
+            policies.map((policy) => (
               <Card
-                key={`draft-${draft.id}`}
+                key={`policy-${policy.id}`}
                 shadow="sm"
                 padding="lg"
                 radius="md"
                 withBorder
-                onClick={() => handleDraftClick(draft)}
+                onClick={() => handlePolicyClick(policy.id)}
                 style={{ cursor: "pointer" }}
               >
                 <div
@@ -229,25 +163,23 @@ export default function MotorPolicies() {
                   >
                     <Car size={32} color="#7E4005" />
                     <div>
-                      <Text fw={500} size="lg">
-                        {draft.vehicle.make} {draft.vehicle.model} (
-                        {draft.vehicle.year_of_manufacture})
+                      <Text fw={500} size="sm">
+                        {policy.request_summary.entity_summary}
                       </Text>
                       <Text size="sm" c="dimmed">
-                        {draft.vehicle.plate_number} •{" "}
-                        {draft.coverage_type.name}
+                        {policy.coverage_type.name}
                       </Text>
                       <Text size="sm" c="teal.6" fw={500}>
-                        {draft.insurance_product.insurer.name}
+                        {policy.insurance_product.name}
                       </Text>
                     </div>
                   </div>
                   <Badge
-                    color={getStatusBadgeColor(draft.status)}
+                    color={getStatusBadgeColor(policy.status)}
                     variant="light"
                   >
-                    {draft.status.charAt(0).toUpperCase() +
-                      draft.status.slice(1)}
+                    {policy.status.charAt(0).toUpperCase() +
+                      policy.status.slice(1)}
                   </Badge>
                 </div>
               </Card>
@@ -255,118 +187,6 @@ export default function MotorPolicies() {
           )}
         </SimpleGrid>
       </Container>
-
-      {/* Modal for Draft Details */}
-      <Modal
-        opened={draftModalOpen}
-        onClose={() => setDraftModalOpen(false)}
-        title={`Policy #${selectedDraft?.id}`}
-        centered
-        size="lg"
-        overlayProps={{
-          color: "#000",
-          opacity: 0.55,
-          blur: 3,
-        }}
-      >
-        {selectedDraft && (
-          <Stack gap="md">
-            <Box>
-              <Text fw={600}>Insurer:</Text>
-              <Text>{selectedDraft.insurance_product.insurer.name}</Text>
-            </Box>
-            <Box>
-              <Text fw={600}>Insurance Product:</Text>
-              <Text>{selectedDraft.insurance_product.name}</Text>
-            </Box>
-            <Box>
-              <Text fw={600}>Coverage Type:</Text>
-              <Text>{selectedDraft.coverage_type.name}</Text>
-            </Box>
-            <Box>
-              <Text fw={600}>Status:</Text>
-              <Badge
-                color={getStatusBadgeColor(selectedDraft.status)}
-                variant="light"
-              >
-                {selectedDraft.status.charAt(0).toUpperCase() +
-                  selectedDraft.status.slice(1)}
-              </Badge>
-            </Box>
-            <Box>
-              <Text fw={600}>Vehicle Details:</Text>
-              <List size="sm">
-                <List.Item>
-                  Type: {selectedDraft.form_data.vehicle_details.vehicle_type}
-                </List.Item>
-                <List.Item>
-                  Usage: {selectedDraft.form_data.vehicle_details.vehicle_usage}
-                </List.Item>
-                <List.Item>
-                  Passengers:{" "}
-                  {selectedDraft.form_data.vehicle_details.number_of_passengers}
-                </List.Item>
-                <List.Item>
-                  Carrying capacity (Goods):{" "}
-                  {selectedDraft.form_data.vehicle_details.goods}
-                </List.Item>
-              </List>
-            </Box>
-            <Box>
-              <Text fw={600}>Residence Address:</Text>
-              <List size="sm">
-                <List.Item>
-                  Region:{" "}
-                  {selectedDraft.form_data.current_residence_address.region}
-                </List.Item>
-                <List.Item>
-                  Zone: {selectedDraft.form_data.current_residence_address.zone}
-                </List.Item>
-                <List.Item>
-                  Woreda:{" "}
-                  {selectedDraft.form_data.current_residence_address.woreda}
-                </List.Item>
-                <List.Item>
-                  Kebele:{" "}
-                  {selectedDraft.form_data.current_residence_address.kebele}
-                </List.Item>
-                <List.Item>
-                  House Number:{" "}
-                  {
-                    selectedDraft.form_data.current_residence_address
-                      .house_number
-                  }
-                </List.Item>
-              </List>
-            </Box>
-            <Box>
-              <Text fw={600}>Vehicle Attributes:</Text>
-              <List size="sm">
-                <List.Item>
-                  Plate Number: {selectedDraft.vehicle.plate_number}
-                </List.Item>
-                <List.Item>
-                  Chassis Number: {selectedDraft.vehicle.chassis_number}
-                </List.Item>
-                <List.Item>
-                  Engine Number: {selectedDraft.vehicle.engine_number}
-                </List.Item>
-                <List.Item>Make: {selectedDraft.vehicle.make}</List.Item>
-                <List.Item>Model: {selectedDraft.vehicle.model}</List.Item>
-                <List.Item>
-                  Year: {selectedDraft.vehicle.year_of_manufacture}
-                </List.Item>
-                <List.Item>
-                  Estimated Value: {selectedDraft.vehicle.estimated_value} Birr
-                </List.Item>
-              </List>
-            </Box>
-            <Button fullWidth onClick={() => setDraftModalOpen(false)}>
-              Close
-            </Button>
-          </Stack>
-        )}
-      </Modal>
     </Box>
   );
 }
