@@ -4,11 +4,11 @@ import { Notifications } from "@mantine/notifications";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import InsuranceWizard from "./pages/customer/marketplace/InsuranceWizard";
-import CarDetails from "./pages/customer/policy/CarDetails";
 import AccountSettingsPage from "./pages/customer/account/AccountSettingsPage";
 import PoliciesTabs from "./pages/customer/policy/PoliciesTabs";
 import HomePolicyDetails from "./pages/customer/policy/HomePolicyDetails";
 import LifePolicyDetails from "./pages/customer/policy/LifePolicyDetails";
+import MotorPolicyDetails from "./pages/customer/policy/MotorPolicyDetails";
 import { Dashboard } from "./pages/customer/Dashboard";
 import { LearningCenter } from "./pages/customer/LearningCenter";
 import { ClaimsFeature } from "./pages/customer/ClaimFeature";
@@ -39,11 +39,13 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/verify-otp" element={<VerifyOtp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-
+            <Route path="/reset-password" element={<ResetPassword />} />{" "}
             <Route element={<ProtectedRoute />}>
               <Route path="/policies" element={<PoliciesTabs />} />
-              <Route path="/policies/motor/:id" element={<CarDetails />} />
+              <Route
+                path="/policies/motor/:id"
+                element={<MotorPolicyDetails />}
+              />
               <Route
                 path="/policies/home/:id"
                 element={<HomePolicyDetails />}
@@ -72,7 +74,6 @@ export default function App() {
 
               <Route path="/insurance" element={<InsuranceWizard />} />
             </Route>
-
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </AuthProvider>
