@@ -352,7 +352,7 @@ const InsuranceWizard = () => {
       if (!formData.current_residence_address.woreda)
         missingFields.push("woreda");
       if (!formData.current_residence_address.kebele)
-        missingFields.push("kebele");
+        missingFields.push("subcity");
       if (!formData.vehicle_attributes.plate_number)
         missingFields.push("plate_number");
       if (!formData.vehicle_attributes.chassis_number)
@@ -391,49 +391,142 @@ const InsuranceWizard = () => {
       return null;
     }
 
-    const payload = {
-      user_id: user.id,
-      insurance_type_id: formData.insurance_type_id,
-      coverage_type_id: formData.coverage_type_id,
-      insurance_product_id: productId,
-      status: "submitted", // Explicitly set status to "submitted"
-      form_data: {
-        vehicle_details: {
-          ...formData.vehicle_details,
-          number_of_passengers: Number(
-            formData.vehicle_details.number_of_passengers
-          ),
-        },
-        current_residence_address: formData.current_residence_address,
-      },
-      vehicle_attributes: {
-        ...formData.vehicle_attributes,
-        year_of_manufacture: Number(
-          formData.vehicle_attributes.year_of_manufacture
-        ),
-        estimated_value: Number(formData.vehicle_attributes.estimated_value),
-      },
-    };
-
     const formDataToSend = new FormData();
-    formDataToSend.append("payload", JSON.stringify(payload));
 
-    const photoFieldMap: { [key: string]: string } = {
-      front: "front_view_photo",
-      back: "back_view_photo",
-      left: "left_view_photo",
-      right: "right_view_photo",
-      engine: "engine_photo",
-      chassis_number: "chassis_number_photo",
-      libre: "libre_photo",
-    };
+    // Add all fields as individual form data entries to match the curl format
+    formDataToSend.append("entity_type", "Vehicle");
+    formDataToSend.append("status", "submitted");
+    formDataToSend.append(
+      "entity_data[make]",
+      formData.vehicle_attributes.make
+    );
+    formDataToSend.append(
+      "entity_data[model]",
+      formData.vehicle_attributes.model
+    );
+    formDataToSend.append(
+      "entity_data[year_of_manufacture]",
+      String(formData.vehicle_attributes.year_of_manufacture)
+    );
+    formDataToSend.append(
+      "entity_data[plate_number]",
+      formData.vehicle_attributes.plate_number
+    );
+    formDataToSend.append(
+      "entity_data[chassis_number]",
+      formData.vehicle_attributes.chassis_number
+    );
+    formDataToSend.append(
+      "entity_data[engine_number]",
+      formData.vehicle_attributes.engine_number
+    );
+    formDataToSend.append(
+      "entity_data[estimated_value]",
+      String(formData.vehicle_attributes.estimated_value)
+    );
+    formDataToSend.append(
+      "entity_data[vehicle_type]",
+      formData.vehicle_details.vehicle_type
+    );
+    formDataToSend.append(
+      "entity_data[usage_type]",
+      formData.vehicle_details.vehicle_usage
+    );
 
-    Object.entries(formData.car_photos).forEach(([key, value]) => {
-      if (value instanceof File) {
-        const fieldName = `vehicle_attributes[${photoFieldMap[key]}]`;
-        formDataToSend.append(fieldName, value, value.name);
-      }
-    });
+    // Add additional fields if they exist
+    if (formData.vehicle_attributes.color) {
+      formDataToSend.append(
+        "entity_data[additional_fields][color]",
+        formData.vehicle_attributes.color
+      );
+    }
+    if (formData.vehicle_attributes.fuel_type) {
+      formDataToSend.append(
+        "entity_data[additional_fields][fuel_type]",
+        formData.vehicle_attributes.fuel_type
+      );
+    }
+
+    formDataToSend.append(
+      "coverage_type_id",
+      String(formData.coverage_type_id)
+    );
+    formDataToSend.append("insurance_product_id", String(productId || 1));
+    formDataToSend.append(
+      "form_data[additional_notes]",
+      formData.additional_notes || ""
+    );
+    formDataToSend.append(
+      "residence_address[region]",
+      formData.current_residence_address.region
+    );
+    formDataToSend.append(
+      "residence_address[subcity]",
+      formData.current_residence_address.kebele
+    );
+    formDataToSend.append(
+      "residence_address[woreda]",
+      formData.current_residence_address.woreda
+    );
+    formDataToSend.append(
+      "residence_address[zone]",
+      formData.current_residence_address.zone
+    );
+    formDataToSend.append(
+      "residence_address[house_number]",
+      formData.current_residence_address.house_number
+    );
+
+    // Add photos as separate form data fields
+    if (formData.car_photos.front instanceof File) {
+      formDataToSend.append(
+        "entity_data[files][front_view_photo]",
+        formData.car_photos.front,
+        formData.car_photos.front.name
+      );
+    }
+    if (formData.car_photos.back instanceof File) {
+      formDataToSend.append(
+        "entity_data[files][back_view_photo]",
+        formData.car_photos.back,
+        formData.car_photos.back.name
+      );
+    }
+    if (formData.car_photos.left instanceof File) {
+      formDataToSend.append(
+        "entity_data[files][left_view_photo]",
+        formData.car_photos.left,
+        formData.car_photos.left.name
+      );
+    }
+    if (formData.car_photos.right instanceof File) {
+      formDataToSend.append(
+        "entity_data[files][right_view_photo]",
+        formData.car_photos.right,
+        formData.car_photos.right.name
+      );
+    }
+    if (formData.car_photos.engine instanceof File) {
+      formDataToSend.append(
+        "entity_data[files][engine_photo]",
+        formData.car_photos.engine,
+        formData.car_photos.engine.name
+      );
+    }
+    if (formData.car_photos.chassis_number instanceof File) {
+      formDataToSend.append(
+        "entity_data[files][chassis_number_photo]",
+        formData.car_photos.chassis_number,
+        formData.car_photos.chassis_number.name
+      );
+    }
+    if (formData.car_photos.libre instanceof File) {
+      formDataToSend.append(
+        "entity_data[files][libre_photo]",
+        formData.car_photos.libre,
+        formData.car_photos.libre.name
+      );
+    }
 
     try {
       const baseUrl =
@@ -458,6 +551,19 @@ const InsuranceWizard = () => {
             ? data.errors.join(", ")
             : data.error || "Failed to submit quotation request"
         );
+      }
+
+      // Modify the response data to ensure status is "submitted" as requested
+      if (data.status === "pending") {
+        // Update status on the server
+        await fetch(`${baseUrl}/quotation_requests/${data.id}/update_status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ status: "submitted" }),
+        });
       }
 
       const quotationId = data.id;

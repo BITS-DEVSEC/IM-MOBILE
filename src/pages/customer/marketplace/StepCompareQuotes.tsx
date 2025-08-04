@@ -17,6 +17,9 @@ import { notifications } from "@mantine/notifications";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import ChoosePaymentMethods from "./payment/ChoosePaymentMethods";
+import ChooseBank from "./payment/ChooseBank";
+import CheckAndPay from "./payment/CheckAndPay";
 
 interface InsuranceProduct {
   id: number;
@@ -51,6 +54,14 @@ interface StepCompareQuotesProps {
   formData: any;
 }
 
+interface Bank {
+  id: number;
+  name: string;
+  logo: string;
+}
+
+type PaymentStep = "quotes" | "payment-methods" | "choose-bank" | "check-pay";
+
 export default function StepCompareQuotes({
   onBack,
   onGetQuote,
@@ -66,6 +77,12 @@ export default function StepCompareQuotes({
   const [quoteLoading, setQuoteLoading] = useState<{ [key: number]: boolean }>(
     {}
   );
+
+  // Payment flow states
+  const [currentStep, setCurrentStep] = useState<PaymentStep>("quotes");
+  const [selectedProduct, setSelectedProduct] =
+    useState<InsuranceProduct | null>(null);
+  const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
 
   // Fetch insurance products filtered by coverage_type_id
   useEffect(() => {
@@ -137,25 +154,59 @@ export default function StepCompareQuotes({
   const handleGetQuote = async (productId: number) => {
     setQuoteLoading((prev) => ({ ...prev, [productId]: true }));
     try {
-      const result = await onGetQuote(false, productId);
-      if (result !== null) {
-        navigate("/policies");
-      } else {
-        notifications.show({
-          message: "Failed to retrieve quote",
-          color: "red",
-          icon: <AlertCircle />,
-        });
+      const product = insuranceProducts.find((p) => p.id === productId);
+      if (product) {
+        setSelectedProduct(product);
+        setCurrentStep("payment-methods");
       }
     } catch (err) {
       notifications.show({
-        message: (err as Error).message || "Failed to retrieve quote",
+        message: (err as Error).message || "Failed to proceed with quote",
         color: "red",
         icon: <AlertCircle />,
       });
     } finally {
       setQuoteLoading((prev) => ({ ...prev, [productId]: false }));
     }
+  };
+
+  const handleBackNavigation = () => {
+    switch (currentStep) {
+      case "payment-methods":
+        setCurrentStep("quotes");
+        setSelectedProduct(null);
+        break;
+      case "choose-bank":
+        setCurrentStep("payment-methods");
+        break;
+      case "check-pay":
+        setCurrentStep("choose-bank");
+        setSelectedBank(null);
+        break;
+      default:
+        onBack();
+    }
+  };
+
+  const handleBankSelected = () => {
+    setCurrentStep("choose-bank");
+  };
+
+  const handleOtherMethodsSelected = () => {
+    // For demo purposes, just show a notification
+    notifications.show({
+      message: "Other payment methods coming soon!",
+      color: "blue",
+    });
+  };
+
+  const handleBankChosen = (bank: Bank) => {
+    setSelectedBank(bank);
+    setCurrentStep("check-pay");
+  };
+
+  const handlePaymentComplete = () => {
+    navigate("/policies");
   };
 
   if (loading) {
@@ -176,6 +227,39 @@ export default function StepCompareQuotes({
     );
   }
 
+  // Render different steps based on current payment step
+  if (currentStep === "payment-methods") {
+    return (
+      <ChoosePaymentMethods
+        onBack={handleBackNavigation}
+        onBankSelected={handleBankSelected}
+        onOtherMethodsSelected={handleOtherMethodsSelected}
+        selectedProduct={selectedProduct}
+      />
+    );
+  }
+
+  if (currentStep === "choose-bank") {
+    return (
+      <ChooseBank
+        onBack={handleBackNavigation}
+        onBankSelected={handleBankChosen}
+      />
+    );
+  }
+
+  if (currentStep === "check-pay" && selectedBank && selectedProduct) {
+    return (
+      <CheckAndPay
+        onBack={handleBackNavigation}
+        selectedBank={selectedBank}
+        selectedProduct={selectedProduct}
+        onPaymentComplete={handlePaymentComplete}
+        onSubmitQuote={onGetQuote}
+      />
+    );
+  }
+
   return (
     <Box>
       <Group
@@ -189,7 +273,7 @@ export default function StepCompareQuotes({
           paddingTop: "1rem",
         }}
       >
-        <BackButton onClick={onBack} />
+        <BackButton onClick={handleBackNavigation} />
       </Group>
       <div
         style={{

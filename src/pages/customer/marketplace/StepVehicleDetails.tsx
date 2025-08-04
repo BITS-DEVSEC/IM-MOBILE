@@ -128,7 +128,6 @@ const VehicleDetails = ({
               }))
             }
           />
-
           <Select
             label="Vehicle Usage"
             placeholder="Select vehicle usage"
@@ -149,7 +148,6 @@ const VehicleDetails = ({
               }))
             }
           />
-
           <Select
             label="Number of Passengers (including driver)"
             placeholder="Enter or select number"
@@ -171,7 +169,6 @@ const VehicleDetails = ({
             styles={{ label: { marginBottom: 4 } }}
             allowDeselect={false}
           />
-
           <TextInput
             label="Carrying Capacity"
             placeholder="Enter Carrying Capacity of your car"
@@ -183,11 +180,9 @@ const VehicleDetails = ({
               }))
             }
           />
-
           <Title order={4} fw={600} mt="md">
             Current Residence Address
           </Title>
-
           <Select
             label="Region"
             placeholder="Select region"
@@ -215,7 +210,6 @@ const VehicleDetails = ({
               }))
             }
           />
-
           <TextInput
             label="Zone"
             placeholder="Enter zone (if applicable)"
@@ -227,7 +221,6 @@ const VehicleDetails = ({
               }))
             }
           />
-
           <TextInput
             label="Woreda"
             placeholder="Enter woreda"
@@ -238,11 +231,10 @@ const VehicleDetails = ({
                 woreda: e.target.value,
               }))
             }
-          />
-
+          />{" "}
           <TextInput
-            label="Kebele"
-            placeholder="Enter kebele"
+            label="Subcity"
+            placeholder="Enter subcity"
             value={residenceAddress.kebele}
             onChange={(e) =>
               setResidenceAddress((prev) => ({
@@ -251,7 +243,6 @@ const VehicleDetails = ({
               }))
             }
           />
-
           <TextInput
             label="House Number / Street"
             placeholder="Enter house number or street name"

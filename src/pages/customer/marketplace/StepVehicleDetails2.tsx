@@ -46,12 +46,17 @@ const VehicleDetails2 = ({
     const existingPlateNumber = initialVehicleAttributes.plate_number || "";
     const plateMatch = existingPlateNumber.match(/^([A-Z]{2})-(.*)$/);
 
+    // Check if the existing make is in our predefined list
+    const existingMake = initialVehicleAttributes.make || "";
+    const isCustomMake = existingMake && !carMakes.includes(existingMake);
+
     return {
       plate_number: plateMatch ? plateMatch[2] : existingPlateNumber,
       plate_prefix: plateMatch ? plateMatch[1] : "AA",
       chassis_number: initialVehicleAttributes.chassis_number || "",
       engine_number: initialVehicleAttributes.engine_number || "",
-      make: initialVehicleAttributes.make || "",
+      make: isCustomMake ? "Other" : existingMake,
+      custom_make: isCustomMake ? existingMake : "",
       model: initialVehicleAttributes.model || "",
       year_of_manufacture:
         initialVehicleAttributes.year_of_manufacture || undefined,
@@ -74,6 +79,32 @@ const VehicleDetails2 = ({
     "SW",
   ];
 
+  const carMakes = [
+    "Toyota",
+    "Ford",
+    "Mitsubishi",
+    "Honda",
+    "Nissan",
+    "Hyundai",
+    "Volkswagen",
+    "BMW",
+    "Mercedes-Benz",
+    "Audi",
+    "Chevrolet",
+    "Kia",
+    "Mazda",
+    "Subaru",
+    "Suzuki",
+    "Isuzu",
+    "Peugeot",
+    "Renault",
+    "Fiat",
+    "Jeep",
+    "Land Rover",
+    "Volvo",
+    "Other",
+  ];
+
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: currentYear - 1950 + 1 }, (_, i) =>
     (1950 + i).toString()
@@ -83,7 +114,9 @@ const VehicleDetails2 = ({
     vehicleAttributes.plate_number.trim() !== "" &&
     vehicleAttributes.chassis_number.trim() !== "" &&
     vehicleAttributes.engine_number.trim() !== "" &&
-    vehicleAttributes.make.trim() !== "" &&
+    (vehicleAttributes.make === "Other"
+      ? vehicleAttributes.custom_make.trim() !== ""
+      : vehicleAttributes.make.trim() !== "") &&
     vehicleAttributes.model.trim() !== "" &&
     vehicleAttributes.year_of_manufacture &&
     vehicleAttributes.year_of_manufacture >= 1950 &&
@@ -94,6 +127,10 @@ const VehicleDetails2 = ({
     onNext({
       ...vehicleAttributes,
       plate_number: `${vehicleAttributes.plate_prefix}${vehicleAttributes.plate_number}`,
+      make:
+        vehicleAttributes.make === "Other"
+          ? vehicleAttributes.custom_make
+          : vehicleAttributes.make,
       year_of_manufacture: Number(vehicleAttributes.year_of_manufacture),
       estimated_value: Number(vehicleAttributes.estimated_value),
     });
@@ -198,17 +235,34 @@ const VehicleDetails2 = ({
             }
           />
 
-          <TextInput
+          <Select
             label="Make (Company)"
-            placeholder="Enter vehicle make"
+            placeholder="Select vehicle make"
+            data={carMakes}
             value={vehicleAttributes.make}
-            onChange={(e) =>
+            onChange={(value) =>
               setVehicleAttributes((prev) => ({
                 ...prev,
-                make: e.target.value,
+                make: value || "",
+                custom_make: value === "Other" ? prev.custom_make : "",
               }))
             }
+            searchable
           />
+
+          {vehicleAttributes.make === "Other" && (
+            <TextInput
+              label="Please insert the Make(company)"
+              placeholder="Enter vehicle make"
+              value={vehicleAttributes.custom_make}
+              onChange={(e) =>
+                setVehicleAttributes((prev) => ({
+                  ...prev,
+                  custom_make: e.target.value,
+                }))
+              }
+            />
+          )}
 
           <TextInput
             label="Model"
