@@ -19,8 +19,6 @@ import { VerifyOtp } from "./pages/auth/VerifyOtp";
 import { ForgotPassword } from "./pages/auth/ForgotPassword";
 import { ResetPassword } from "./pages/auth/ResetPassword";
 import { RoleLayout } from "./layouts/RoleLayout";
-import { AdminLogin } from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const InsurerHome = () => <h1>Insurer Home</h1>;
 const InsurerListings = () => <h1>Insurer Listings</h1>;
@@ -77,10 +75,6 @@ export default function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
         </AuthProvider>
-        <Routes>
-          <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-        </Routes>
       </MantineProvider>
     </BrowserRouter>
   );
