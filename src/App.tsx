@@ -13,7 +13,7 @@ import { Dashboard } from "./pages/customer/Dashboard";
 import { LearningCenter } from "./pages/customer/LearningCenter";
 import { ClaimsFeature } from "./pages/customer/ClaimFeature";
 import { NewClaimForm } from "./pages/customer/NewClaimForm";
-import { Login } from "./pages/auth/Login";
+import { Login } from "./pages/auth/login";
 import { Register } from "./pages/auth/Register";
 import { VerifyOtp } from "./pages/auth/VerifyOtp";
 import { ForgotPassword } from "./pages/auth/ForgotPassword";
