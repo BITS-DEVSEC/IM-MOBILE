@@ -249,7 +249,10 @@ export function NewClaimForm() {
     }
   }, [isDriverPolicyHolder, selectedPolicy]);
 
-  const handleChange = (field: string, value: string | boolean | File | File[] | null | undefined) => {
+  const handleChange = (
+    field: string,
+    value: string | boolean | File | File[] | null | undefined
+  ) => {
     if (field.includes(".")) {
       const [parent, child] = field.split(".");
       setFormData((prev) => ({

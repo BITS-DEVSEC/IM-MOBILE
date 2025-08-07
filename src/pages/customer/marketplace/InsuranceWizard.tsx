@@ -675,13 +675,15 @@ const InsuranceWizard = () => {
           <VehicleDetails2
             onBack={() => setCurrentStep("vehicle-details")}
             onNext={(attributes) => {
-              setFormData((prev: { vehicle_attributes: Record<string, unknown> }) => ({
-                ...prev,
-                vehicle_attributes: {
-                  ...prev.vehicle_attributes,
-                  ...attributes,
-                },
-              }));
+              setFormData(
+                (prev: { vehicle_attributes: Record<string, unknown> }) => ({
+                  ...prev,
+                  vehicle_attributes: {
+                    ...prev.vehicle_attributes,
+                    ...attributes,
+                  },
+                })
+              );
               setCurrentStep("car-photos");
             }}
             initialVehicleAttributes={formData.vehicle_attributes}
