@@ -12,9 +12,9 @@ import {
   useMantineTheme,
   Button,
   Modal,
+  Checkbox,
 } from "@mantine/core";
 import { Info, Camera } from "lucide-react";
-import WizardButton from "../../../components/button/WizardButton";
 import BackButton from "../../../components/button/BackButton";
 import { useEffect, useRef, useState } from "react";
 
@@ -34,6 +34,10 @@ const angleExamples = {
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQajh-H3Zqcp_Ayd7QqfKvmPSHUFCw9-9C8kg&s",
   engine:
     "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSazE_jx6s_K_qt738tvhkHibjGRrrgCxM7OQ&s",
+  chassis_number:
+    "data:image/jpeg;base64,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",
+  libre:
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQov4JmtHH7ZZU5ohBT3JPmsr7jHpu7LgcOmg&s",
 };
 
 export default function StepUploadCarPhotos({
@@ -44,6 +48,8 @@ export default function StepUploadCarPhotos({
 }: StepUploadCarPhotosProps) {
   const theme = useMantineTheme();
   const [activeAngle, setActiveAngle] = useState<string | null>(null);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -105,9 +111,9 @@ export default function StepUploadCarPhotos({
       [angle]: null,
     });
   };
+
   useEffect(() => {
     return () => {
-      // Clean up blob URLs when component unmounts
       Object.values(carPhotos).forEach((photo) => {
         if (photo) {
           URL.revokeObjectURL(URL.createObjectURL(photo));
@@ -135,7 +141,8 @@ export default function StepUploadCarPhotos({
           Capture Vehicle Photos
         </Title>
         <Text size="sm" c="dimmed" mb="lg" ta="center">
-          Please capture clear photos of your vehicle from all angles
+          Please capture clear photos of your vehicle from all angles, including
+          the chassis number and libre document.
         </Text>
 
         <Alert
@@ -146,16 +153,24 @@ export default function StepUploadCarPhotos({
           icon={<Info size={18} />}
         >
           <Text size="sm">
-            Capture clear photos from all angles. Ensure the entire vehicle is
-            visible and well-lit.
+            Capture clear photos from all angles. Ensure the entire vehicle,
+            chassis number, and libre document are visible and well-lit.
           </Text>
         </Alert>
 
         <Stack gap="xl">
-          {["front", "back", "left", "right", "engine"].map((angle) => (
+          {[
+            "front",
+            "back",
+            "left",
+            "right",
+            "engine",
+            "chassis_number",
+            "libre",
+          ].map((angle) => (
             <Box key={angle}>
               <Text size="sm" fw={600} tt="capitalize" mb="xs">
-                {angle} view
+                {angle.replace("_", " ")} view photo
               </Text>
               <Flex gap="md" align="center">
                 {carPhotos[angle] ? (
@@ -197,7 +212,7 @@ export default function StepUploadCarPhotos({
                       backgroundColor: "white",
                     }}
                   >
-                    Capture {angle} view
+                    Capture {angle.replace("_", " ")} view
                   </Button>
                 )}
 
@@ -219,6 +234,7 @@ export default function StepUploadCarPhotos({
                     alt={`${angle} angle example`}
                     height={80}
                     style={{ objectFit: "cover" }}
+                    fallbackSrc="https://via.placeholder.com/80?text=No+Example"
                   />
                   <Text size="xs" c="dimmed" ta="center" mt={4}>
                     Example
@@ -228,11 +244,32 @@ export default function StepUploadCarPhotos({
             </Box>
           ))}
         </Stack>
+
         <Group grow p="md" style={{ flexShrink: 0 }}>
-          <WizardButton variant="next" onClick={onNext} />
+          <Checkbox
+            checked={termsAgreed}
+            onChange={(event) => setTermsAgreed(event.currentTarget.checked)}
+            label={
+              <Text size="sm">
+                I agree to the{" "}
+                <Text
+                  span
+                  c="blue"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setTermsModalOpen(true)}
+                >
+                  Terms and Conditions
+                </Text>
+              </Text>
+            }
+          />
+          <Button onClick={onNext} disabled={!termsAgreed}>
+            Next
+          </Button>
         </Group>
       </ScrollArea>
 
+      {/* Camera Modal */}
       <Modal
         opened={activeAngle !== null}
         onClose={stopCamera}
@@ -277,6 +314,104 @@ export default function StepUploadCarPhotos({
             </Button>
           </Group>
         </Box>
+      </Modal>
+
+      {/* Terms and Conditions Modal */}
+      <Modal
+        opened={termsModalOpen}
+        onClose={() => setTermsModalOpen(false)}
+        title="Terms and Conditions"
+        size="lg"
+        centered
+        overlayProps={{
+          color: theme.colors.dark[9],
+          opacity: 0.55,
+          blur: 3,
+        }}
+      >
+        <ScrollArea style={{ height: "60vh" }}>
+          <Stack gap="md">
+            <Text size="sm">
+              <Text fw={600}>1. Introduction</Text>
+              <Text>
+                These Terms and Conditions govern your use of our insurance
+                services for vehicle coverage. By agreeing to these terms, you
+                acknowledge your understanding and acceptance of the policies
+                outlined below.
+              </Text>
+            </Text>
+            <Text size="sm">
+              <Text fw={600}>2. Insurance Coverage</Text>
+              <Text>
+                The insurance policy provides coverage for the vehicle as
+                specified in the application, including but not limited to
+                damages, theft, and third-party liabilities, subject to the
+                selected coverage type (e.g., Comprehensive, Third Party).
+              </Text>
+            </Text>
+            <Text size="sm">
+              <Text fw={600}>3. Photo Requirements</Text>
+              <Text>
+                You are required to provide clear and accurate photos of the
+                vehicle from all specified angles (front, back, left, right,
+                engine, chassis number, and libre document). Failure to provide
+                acceptable photos may result in delays or rejection of your
+                insurance application.
+              </Text>
+            </Text>
+            <Text size="sm">
+              <Text fw={600}>4. Premium Payments</Text>
+              <Text>
+                Premiums must be paid as per the agreed schedule. Non-payment
+                may result in the cancellation of your policy. All payments are
+                non-refundable unless otherwise stated.
+              </Text>
+            </Text>
+            <Text size="sm">
+              <Text fw={600}>5. Claims Process</Text>
+              <Text>
+                In the event of an incident, you must notify us within 48 hours
+                and provide all necessary documentation, including photos,
+                police reports, and witness statements. Claims are subject to
+                review and approval by the insurer.
+              </Text>
+            </Text>
+            <Text size="sm">
+              <Text fw={600}>6. Policy Cancellation</Text>
+              <Text>
+                You may cancel your policy by providing written notice. Refunds,
+                if applicable, will be processed according to the policy terms.
+                The insurer reserves the right to cancel the policy for
+                non-compliance with these terms.
+              </Text>
+            </Text>
+            <Text size="sm">
+              <Text fw={600}>7. Liability</Text>
+              <Text>
+                The insurer is not liable for damages arising from misuse of the
+                vehicle, intentional acts, or failure to comply with legal
+                requirements. Coverage is limited to the terms specified in the
+                policy document.
+              </Text>
+            </Text>
+            <Text size="sm">
+              <Text fw={600}>8. Governing Law</Text>
+              <Text>
+                These terms are governed by the laws of the jurisdiction in
+                which the insurance policy is issued. Any disputes will be
+                resolved in the courts of that jurisdiction.
+              </Text>
+            </Text>
+          </Stack>
+        </ScrollArea>
+        <Button
+          fullWidth
+          onClick={() => setTermsModalOpen(false)}
+          mt="md"
+          variant="outline"
+        >
+          Close
+        </Button>
       </Modal>
     </Box>
   );

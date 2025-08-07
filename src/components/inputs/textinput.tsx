@@ -36,7 +36,7 @@ export function TextInputs({
       )}
       <TextInput
         placeholder={placeholder}
-        radius="sm"
+        radius="md"
         size="md"
         styles={{ label: { marginBottom: 4 } }}
       />
