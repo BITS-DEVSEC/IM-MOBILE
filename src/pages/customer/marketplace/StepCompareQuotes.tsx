@@ -20,38 +20,12 @@ import { useNavigate } from "react-router-dom";
 import ChoosePaymentMethods from "./payment/ChoosePaymentMethods";
 import ChooseBank from "./payment/ChooseBank";
 import CheckAndPay from "./payment/CheckAndPay";
-
-interface InsuranceProduct {
-  id: number;
-  name: string;
-  description: string;
-  estimated_price: string;
-  customer_rating: number | null;
-  status: string;
-  coverage_type: {
-    id: number;
-    insurance_type_id: number;
-    name: string;
-    description: string;
-    created_at: string;
-    updated_at: string;
-  };
-  insurer: {
-    id: number;
-    name: string;
-    description: string;
-    contact_email: string;
-    contact_phone: string;
-    api_endpoint: string;
-    api_key: string;
-    logo_url: string | null;
-  };
-}
+import { InsuranceProduct, WizardFormData } from "../../../types";
 
 interface StepCompareQuotesProps {
   onBack: () => void;
   onGetQuote: (isDraft: boolean, productId?: number) => Promise<number | null>;
-  formData: any;
+  formData: WizardFormData;
 }
 
 interface Bank {
@@ -228,7 +202,7 @@ export default function StepCompareQuotes({
   }
 
   // Render different steps based on current payment step
-  if (currentStep === "payment-methods") {
+  if (currentStep === "payment-methods" && selectedProduct) {
     return (
       <ChoosePaymentMethods
         onBack={handleBackNavigation}

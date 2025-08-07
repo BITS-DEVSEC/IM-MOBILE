@@ -15,6 +15,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { notifications } from "@mantine/notifications";
 import { AlertCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { WizardFormData, QuotationRequest } from "../../../types";
 
 export type WizardStep =
   | "insurance-category"
@@ -29,66 +30,41 @@ export type WizardStep =
   | "life-insurance-type"
   | "life-insurance-options";
 
-interface QuotationRequest {
-  error: string;
-  id: number;
-  form_data: {
-    vehicle_details: {
-      vehicle_type: string;
-      vehicle_usage: string;
-      number_of_passengers: number;
-      goods: string;
-    };
-    current_residence_address: {
-      region: string;
-      zone: string;
-      woreda: string;
-      kebele: string;
-      house_number: string;
-    };
-  };
-  created_at: string;
-  updated_at: string;
-  user: {
-    id: number;
-    email: string | null;
-    verified: boolean;
-    phone_number: string;
-    fin: string;
-    created_at: string;
-    updated_at: string;
-  };
-  insurance_type: {
-    id: number;
-    name: string;
-    description: string;
-  };
-  coverage_type: {
-    id: number;
-    insurance_type_id: number;
-    name: string;
-    description: string;
-    created_at: string;
-    updated_at: string;
-  };
-  vehicle: {
-    id: number;
-    plate_number: string;
-    chassis_number: string;
-    engine_number: string;
-    year_of_manufacture: number;
-    make: string;
-    model: string;
-    estimated_value: string;
-    front_view_photo_url: string | null;
-    back_view_photo_url: string | null;
-    left_view_photo_url: string | null;
-    right_view_photo_url: string | null;
-    engine_photo_url: string | null;
-    chassis_number_photo_url: string | null;
-    libre_photo_url: string | null;
-  };
-}
+const createDefaultFormData = (): WizardFormData => ({
+  insurance_type_id: 0,
+  coverage_type_id: 0,
+  vehicle_details: {
+    vehicle_type: "",
+    vehicle_usage: "",
+    number_of_passengers: 0,
+    goods: "",
+  },
+  current_residence_address: {
+    region: "",
+    zone: "",
+    woreda: "",
+    kebele: "",
+    house_number: "",
+  },
+  vehicle_attributes: {
+    plate_number: "",
+    chassis_number: "",
+    engine_number: "",
+    make: "",
+    model: "",
+    year_of_manufacture: 0,
+    estimated_value: 0,
+  },
+  car_photos: {
+    front: null,
+    back: null,
+    left: null,
+    right: null,
+    engine: null,
+    chassis_number: null,
+    libre: null,
+  },
+});
 
 const InsuranceWizard = () => {
   const { user, accessToken } = useAuth();
@@ -119,41 +95,7 @@ const InsuranceWizard = () => {
   });
 
   // Initialize formData from localStorage or default
-  const defaultFormData = {
-    insurance_type_id: 0,
-    coverage_type_id: 0,
-    vehicle_details: {
-      vehicle_type: "",
-      vehicle_usage: "",
-      number_of_passengers: 0,
-      goods: "",
-    },
-    current_residence_address: {
-      region: "",
-      zone: "",
-      woreda: "",
-      kebele: "",
-      house_number: "",
-    },
-    vehicle_attributes: {
-      plate_number: "",
-      chassis_number: "",
-      engine_number: "",
-      make: "",
-      model: "",
-      year_of_manufacture: 0,
-      estimated_value: 0,
-    },
-    car_photos: {
-      front: null,
-      back: null,
-      left: null,
-      right: null,
-      engine: null,
-      chassis_number: null,
-      libre: null,
-    },
-  };
+  const defaultFormData = createDefaultFormData();
 
   const [formData, setFormData] = useState(() => {
     const savedFormData = localStorage.getItem("insuranceWizardFormData");
@@ -171,7 +113,7 @@ const InsuranceWizard = () => {
   // Reset formData when navigating to insurance-category
   useEffect(() => {
     if (currentStep === "insurance-category") {
-      setFormData(defaultFormData);
+      setFormData(createDefaultFormData());
       setDraftId(null);
       localStorage.removeItem("insuranceWizardFormData");
     }
@@ -184,11 +126,12 @@ const InsuranceWizard = () => {
     if (draftId) params.set("draftId", draftId.toString());
     else params.delete("draftId");
     navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-  }, [currentStep, draftId, navigate, location.pathname]);
+  }, [currentStep, draftId, navigate, location.pathname, location.search]);
 
   // Persist formData to localStorage, excluding car_photos
   useEffect(() => {
     if (currentStep !== "insurance-category") {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { car_photos, ...dataToSave } = formData;
       localStorage.setItem(
         "insuranceWizardFormData",
@@ -288,6 +231,7 @@ const InsuranceWizard = () => {
         };
 
         setFormData(updatedFormData);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { car_photos, ...dataToSave } = updatedFormData;
         localStorage.setItem(
           "insuranceWizardFormData",
@@ -314,7 +258,7 @@ const InsuranceWizard = () => {
       (t) => t.name.toLowerCase() === type
     );
     if (insuranceType) {
-      setFormData((prev: any) => ({
+      setFormData((prev: WizardFormData) => ({
         ...prev,
         insurance_type_id: insuranceType.id,
       }));
@@ -596,7 +540,7 @@ const InsuranceWizard = () => {
           <InsuranceSelection
             selectedInsurance={formData.insurance_type_id.toString()}
             onSelectInsurance={(id) => {
-              setFormData((prev: any) => ({
+              setFormData((prev: WizardFormData) => ({
                 ...prev,
                 insurance_type_id: parseInt(id),
               }));
@@ -619,7 +563,7 @@ const InsuranceWizard = () => {
                   (c) => c.name.toLowerCase().replace(/\s+/g, "-") === type
                 );
               if (coverage) {
-                setFormData((prev: any) => ({
+                setFormData((prev: WizardFormData) => ({
                   ...prev,
                   coverage_type_id: coverage.id,
                 }));
@@ -646,22 +590,17 @@ const InsuranceWizard = () => {
           <VehicleDetails
             onBack={() => setCurrentStep("select-compensation")}
             onNext={(details) => {
-              setFormData(
-                (prev: {
-                  vehicle_details: any;
-                  current_residence_address: any;
-                }) => ({
-                  ...prev,
-                  vehicle_details: {
-                    ...prev.vehicle_details,
-                    ...details.vehicle_details,
-                  },
-                  current_residence_address: {
-                    ...prev.current_residence_address,
-                    ...details.current_residence_address,
-                  },
-                })
-              );
+              setFormData((prev: WizardFormData) => ({
+                ...prev,
+                vehicle_details: {
+                  ...prev.vehicle_details,
+                  ...details.vehicle_details,
+                },
+                current_residence_address: {
+                  ...prev.current_residence_address,
+                  ...details.current_residence_address,
+                },
+              }));
               setCurrentStep("vehicle-details-2");
             }}
             initialVehicleDetails={formData.vehicle_details}
@@ -673,7 +612,7 @@ const InsuranceWizard = () => {
           <VehicleDetails2
             onBack={() => setCurrentStep("vehicle-details")}
             onNext={(attributes) => {
-              setFormData((prev: { vehicle_attributes: any }) => ({
+              setFormData((prev: WizardFormData) => ({
                 ...prev,
                 vehicle_attributes: {
                   ...prev.vehicle_attributes,
@@ -690,7 +629,7 @@ const InsuranceWizard = () => {
           <StepUploadCarPhotos
             carPhotos={formData.car_photos}
             setCarPhotos={(photos) => {
-              setFormData((prev: { car_photos: any }) => ({
+              setFormData((prev: WizardFormData) => ({
                 ...prev,
                 car_photos: {
                   ...prev.car_photos,
@@ -723,7 +662,7 @@ const InsuranceWizard = () => {
                   (c) => c.name.toLowerCase().replace(/\s+/g, "-") === type
                 );
               if (coverage) {
-                setFormData((prev: any) => ({
+                setFormData((prev: WizardFormData) => ({
                   ...prev,
                   coverage_type_id: coverage.id,
                 }));
@@ -761,7 +700,7 @@ const InsuranceWizard = () => {
                   (c) => c.name.toLowerCase().replace(/\s+/g, "-") === type
                 );
               if (coverage) {
-                setFormData((prev: any) => ({
+                setFormData((prev: WizardFormData) => ({
                   ...prev,
                   coverage_type_id: coverage.id,
                 }));
