@@ -6,18 +6,136 @@ import {
   ScrollArea,
   Alert,
   Text,
+  TextInput,
+  Select,
 } from "@mantine/core";
 import WizardButton from "../../../components/button/WizardButton";
 import { Info } from "lucide-react";
-import { TextInputs } from "../../../components/inputs/textinput";
 import BackButton from "../../../components/button/BackButton";
+import { useState } from "react";
 
 interface VehicleDetails2Props {
   onBack: () => void;
-  onNext: () => void;
+  onNext: (attributes: {
+    plate_number: string;
+    chassis_number: string;
+    engine_number: string;
+    make: string;
+    model: string;
+    year_of_manufacture: number;
+    estimated_value: number;
+  }) => void;
+  initialVehicleAttributes: {
+    plate_number: string;
+    chassis_number: string;
+    engine_number: string;
+    make: string;
+    model: string;
+    year_of_manufacture: number;
+    estimated_value: number;
+  };
 }
 
-const VehicleDetails2 = ({ onBack, onNext }: VehicleDetails2Props) => {
+const VehicleDetails2 = ({
+  onBack,
+  onNext,
+  initialVehicleAttributes,
+}: VehicleDetails2Props) => {
+  const [vehicleAttributes, setVehicleAttributes] = useState(() => {
+    // Parse existing plate number to extract prefix and number
+    const existingPlateNumber = initialVehicleAttributes.plate_number || "";
+    const plateMatch = existingPlateNumber.match(/^([A-Z]{2})-(.*)$/);
+
+    // Check if the existing make is in our predefined list
+    const existingMake = initialVehicleAttributes.make || "";
+    const isCustomMake = existingMake && !carMakes.includes(existingMake);
+
+    return {
+      plate_number: plateMatch ? plateMatch[2] : existingPlateNumber,
+      plate_prefix: plateMatch ? plateMatch[1] : "AA",
+      chassis_number: initialVehicleAttributes.chassis_number || "",
+      engine_number: initialVehicleAttributes.engine_number || "",
+      make: isCustomMake ? "Other" : existingMake,
+      custom_make: isCustomMake ? existingMake : "",
+      model: initialVehicleAttributes.model || "",
+      year_of_manufacture:
+        initialVehicleAttributes.year_of_manufacture || undefined,
+      estimated_value: initialVehicleAttributes.estimated_value || 0,
+    };
+  });
+
+  const plateNumberPrefixes = [
+    "AA",
+    "AF",
+    "AM",
+    "OR",
+    "SO",
+    "SN",
+    "GA",
+    "BG",
+    "HA",
+    "DD",
+    "SD",
+    "SW",
+  ];
+
+  const carMakes = [
+    "Toyota",
+    "Ford",
+    "Mitsubishi",
+    "Honda",
+    "Nissan",
+    "Hyundai",
+    "Volkswagen",
+    "BMW",
+    "Mercedes-Benz",
+    "Audi",
+    "Chevrolet",
+    "Kia",
+    "Mazda",
+    "Subaru",
+    "Suzuki",
+    "Isuzu",
+    "Peugeot",
+    "Renault",
+    "Fiat",
+    "Jeep",
+    "Land Rover",
+    "Volvo",
+    "Other",
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: currentYear - 1950 + 1 }, (_, i) =>
+    (1950 + i).toString()
+  );
+
+  const isFormValid =
+    vehicleAttributes.plate_number.trim() !== "" &&
+    vehicleAttributes.chassis_number.trim() !== "" &&
+    vehicleAttributes.engine_number.trim() !== "" &&
+    (vehicleAttributes.make === "Other"
+      ? vehicleAttributes.custom_make.trim() !== ""
+      : vehicleAttributes.make.trim() !== "") &&
+    vehicleAttributes.model.trim() !== "" &&
+    vehicleAttributes.year_of_manufacture &&
+    vehicleAttributes.year_of_manufacture >= 1950 &&
+    vehicleAttributes.year_of_manufacture <= currentYear &&
+    vehicleAttributes.estimated_value > 0;
+  const handleNext = () => {
+    if (!isFormValid) return;
+    onNext({
+      ...vehicleAttributes,
+      plate_number: `${vehicleAttributes.plate_prefix}${vehicleAttributes.plate_number}`,
+      make:
+        vehicleAttributes.make === "Other"
+          ? vehicleAttributes.custom_make
+          : vehicleAttributes.make,
+      year_of_manufacture: Number(vehicleAttributes.year_of_manufacture),
+      estimated_value: Number(vehicleAttributes.estimated_value),
+    });
+  };
+
   return (
     <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <Group mb="md">
@@ -34,7 +152,6 @@ const VehicleDetails2 = ({ onBack, onNext }: VehicleDetails2Props) => {
         >
           Additional Vehicle Details
         </Title>
-
         <Alert
           variant="light"
           color="primary"
@@ -44,30 +161,166 @@ const VehicleDetails2 = ({ onBack, onNext }: VehicleDetails2Props) => {
         >
           <Text size="sm">
             You can find all these details on your car's registration document
-            (Libre) visible.
+            (Libre).
           </Text>
-        </Alert>
-
+        </Alert>{" "}
         <Stack gap="lg" pb="xl">
-          <TextInputs label="Plate Number" placeholder="Enter plate number" />
-          <TextInputs
+          <Box>
+            <Text size="sm" fw={500} mb={5}>
+              Plate Number
+            </Text>
+            <Group gap={0}>
+              <Select
+                data={plateNumberPrefixes}
+                value={vehicleAttributes.plate_prefix}
+                onChange={(value) =>
+                  setVehicleAttributes((prev) => ({
+                    ...prev,
+                    plate_prefix: value || "AA",
+                  }))
+                }
+                styles={{
+                  input: {
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    borderRight: 0,
+                    width: "80px",
+                    textAlign: "center",
+                  },
+                }}
+                comboboxProps={{ withinPortal: true }}
+              />
+              <TextInput
+                placeholder="A12345"
+                value={vehicleAttributes.plate_number}
+                onChange={(e) =>
+                  setVehicleAttributes((prev) => ({
+                    ...prev,
+                    plate_number: e.target.value,
+                  }))
+                }
+                styles={{
+                  input: {
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    flex: 1,
+                  },
+                }}
+                style={{ flex: 1 }}
+              />
+            </Group>
+          </Box>
+
+          <TextInput
             label="Chassis Number"
             placeholder="Enter chassis number"
+            value={vehicleAttributes.chassis_number}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                chassis_number: e.target.value,
+              }))
+            }
           />
-          <TextInputs label="Engine Number" placeholder="Enter engine number" />
-          <TextInputs label="Make (Company)" placeholder="Enter vehicle make" />
-          <TextInputs label="Model" placeholder="Enter vehicle model" />
-          <TextInputs
-            label="Engine Capacity (CC)"
-            placeholder="Enter engine capacity"
+
+          <TextInput
+            label="Engine Number"
+            placeholder="Enter engine number"
+            value={vehicleAttributes.engine_number}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                engine_number: e.target.value,
+              }))
+            }
           />
-          <TextInputs
+
+          <Select
+            label="Make (Company)"
+            placeholder="Select vehicle make"
+            data={carMakes}
+            value={vehicleAttributes.make}
+            onChange={(value) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                make: value || "",
+                custom_make: value === "Other" ? prev.custom_make : "",
+              }))
+            }
+            searchable
+          />
+
+          {vehicleAttributes.make === "Other" && (
+            <TextInput
+              label="Please insert the Make(company)"
+              placeholder="Enter vehicle make"
+              value={vehicleAttributes.custom_make}
+              onChange={(e) =>
+                setVehicleAttributes((prev) => ({
+                  ...prev,
+                  custom_make: e.target.value,
+                }))
+              }
+            />
+          )}
+
+          <TextInput
+            label="Model"
+            placeholder="Enter vehicle model"
+            value={vehicleAttributes.model}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                model: e.target.value,
+              }))
+            }
+          />
+
+          <Select
             label="Year of Manufacture"
-            placeholder="Enter year of manufacture"
+            placeholder="Select or enter year"
+            data={yearOptions}
+            searchable
+            value={
+              vehicleAttributes.year_of_manufacture
+                ? vehicleAttributes.year_of_manufacture.toString()
+                : ""
+            }
+            onChange={(value) => {
+              const year = Number(value);
+              if (!isNaN(year) && year >= 1950 && year <= currentYear) {
+                setVehicleAttributes((prev) => ({
+                  ...prev,
+                  year_of_manufacture: year,
+                }));
+              } else {
+                setVehicleAttributes((prev) => ({
+                  ...prev,
+                  year_of_manufacture: 0,
+                }));
+              }
+            }}
+          />
+
+          <TextInput
+            label="Estimated Value (Car Price in Birr)"
+            placeholder="Enter estimated value"
+            type="number"
+            value={vehicleAttributes.estimated_value || ""}
+            onChange={(e) =>
+              setVehicleAttributes((prev) => ({
+                ...prev,
+                estimated_value: Number(e.target.value),
+              }))
+            }
           />
         </Stack>
         <Group grow p="md" style={{ flexShrink: 0 }}>
-          <WizardButton variant="next" onClick={onNext} />
+          <WizardButton
+            variant="next"
+            onClick={handleNext}
+            disabled={!isFormValid}
+          />
         </Group>
       </ScrollArea>
     </Box>
