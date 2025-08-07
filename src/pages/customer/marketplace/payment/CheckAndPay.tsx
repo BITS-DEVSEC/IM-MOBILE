@@ -12,17 +12,12 @@ import BackButton from "../../../../components/button/BackButton";
 import { useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { CheckCircle } from "lucide-react";
-
-interface Bank {
-  id: number;
-  name: string;
-  logo: string;
-}
+import { Bank, InsuranceProduct } from "../../../../types";
 
 interface CheckAndPayProps {
   onBack: () => void;
   selectedBank: Bank;
-  selectedProduct: any;
+  selectedProduct: InsuranceProduct;
   onPaymentComplete: () => void;
   onSubmitQuote: (
     isDraft: boolean,
@@ -64,7 +59,7 @@ export default function CheckAndPay({
       } else {
         throw new Error("Failed to create policy");
       }
-    } catch (error) {
+    } catch {
       notifications.show({
         message: "Payment failed. Please try again.",
         color: "red",
