@@ -88,7 +88,7 @@ const AdminDashboard: React.FC = () => {
   const [modalOpened, setModalOpened] = useState<boolean>(false);
   const [imageModalOpened, setImageModalOpened] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<QuotationRequest | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -146,7 +146,7 @@ const AdminDashboard: React.FC = () => {
     if (user && accessToken) {
       fetchQuotations();
     }
-  }, [user, accessToken]);
+  }, [user, accessToken, fetchQuotations]);
 
   const openModal = (quotation: QuotationRequest) => {
     setSelectedQuotation(quotation);

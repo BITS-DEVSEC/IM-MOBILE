@@ -2,11 +2,22 @@ import { Card, Text, Title, Group, Stack, Box } from "@mantine/core";
 import { CreditCard, Building } from "lucide-react";
 import BackButton from "../../../../components/button/BackButton";
 
+interface Insurer {
+  name: string;
+}
+
+interface SelectedProduct {
+  id: number;
+  estimated_price: string;
+  insurer: Insurer;
+  description: string;
+}
+
 interface ChoosePaymentMethodsProps {
   onBack: () => void;
   onBankSelected: () => void;
   onOtherMethodsSelected: () => void;
-  selectedProduct: any;
+  selectedProduct: SelectedProduct;
 }
 
 export default function ChoosePaymentMethods({

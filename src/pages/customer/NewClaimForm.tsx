@@ -41,6 +41,14 @@ import AppContainer from "../../components/AppContainer";
 import { useNavigate } from "react-router-dom";
 import BottomNavigation from "./BottomNavigation";
 
+interface Policy {
+  id: string;
+  label: string;
+  policyNumber: string;
+  policyType: string;
+  policyHolder: string;
+}
+
 // Mock user data - in real app, this would come from authentication/profile
 const mockUserProfile = {
   fullName: "Samuel Asmare Zerefa",
@@ -86,7 +94,7 @@ const mockPolicies = [
 export function NewClaimForm() {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState(0);
-  const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [isDriverPolicyHolder, setIsDriverPolicyHolder] = useState(true);
   const [isThirdPartyInvolved, setIsThirdPartyInvolved] = useState(false);
   const [isPoliceNotified, setIsPoliceNotified] = useState(false);
@@ -241,7 +249,7 @@ export function NewClaimForm() {
     }
   }, [isDriverPolicyHolder, selectedPolicy]);
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | boolean | File | File[] | null | undefined) => {
     if (field.includes(".")) {
       const [parent, child] = field.split(".");
       setFormData((prev) => ({
@@ -307,18 +315,6 @@ export function NewClaimForm() {
         }
       );
     }
-  };
-
-  const handleSubmit = () => {
-    notifications.show({
-      title: "Claim Submitted Successfully",
-      message: "Your claim #CL-2023-0058 has been submitted",
-      color: "green",
-    });
-
-    setTimeout(() => {
-      window.location.href = "/claims";
-    }, 2000);
   };
 
   return (

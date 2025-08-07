@@ -77,9 +77,9 @@ export const useTokenRefresh = ({
     }
 
     return () => clearInterval(refreshInterval);
-  }, [accessToken]);
+  }, [accessToken, refreshAuthToken]);
 
   useEffect(() => {
     refreshAuthToken();
-  }, []);
+  }, [refreshAuthToken]);
 };

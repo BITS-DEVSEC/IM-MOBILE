@@ -161,7 +161,7 @@ export const AdminLogin: React.FC = () => {
     } finally {
       setUser(null);
       setAccessToken(null);
-      setRefreshTokenwhom: null;
+      setRefreshToken(null);
       localStorage.removeItem("admin_refresh_token");
       localStorage.removeItem("admin_user");
       localStorage.removeItem("admin_access_token");
@@ -180,7 +180,7 @@ export const AdminLogin: React.FC = () => {
     } else {
       setIsLoading(false);
     }
-  }, []);
+  }, [refreshAuthToken]);
 
   const handleSubmit = async (values: typeof form.values) => {
     const identifier = isPhoneLogin

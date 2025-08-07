@@ -19,10 +19,21 @@ interface Bank {
   logo: string;
 }
 
+interface Insurer {
+  name: string;
+}
+
+interface SelectedProduct {
+  id: number;
+  estimated_price: string;
+  insurer: Insurer;
+  description: string;
+}
+
 interface CheckAndPayProps {
   onBack: () => void;
   selectedBank: Bank;
-  selectedProduct: any;
+  selectedProduct: SelectedProduct;
   onPaymentComplete: () => void;
   onSubmitQuote: (
     isDraft: boolean,
@@ -64,7 +75,7 @@ export default function CheckAndPay({
       } else {
         throw new Error("Failed to create policy");
       }
-    } catch (error) {
+    } catch {
       notifications.show({
         message: "Payment failed. Please try again.",
         color: "red",

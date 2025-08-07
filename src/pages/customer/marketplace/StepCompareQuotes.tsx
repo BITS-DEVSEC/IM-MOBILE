@@ -21,6 +21,16 @@ import ChoosePaymentMethods from "./payment/ChoosePaymentMethods";
 import ChooseBank from "./payment/ChooseBank";
 import CheckAndPay from "./payment/CheckAndPay";
 
+// Import the type that payment components use
+type SelectedProduct = {
+  id: number;
+  estimated_price: string;
+  insurer: {
+    name: string;
+  };
+  description: string;
+};
+
 interface InsuranceProduct {
   id: number;
   name: string;
@@ -48,10 +58,19 @@ interface InsuranceProduct {
   };
 }
 
+interface FormData {
+  coverage_type_id: number;
+  insurance_type_id: number;
+  vehicle_details: Record<string, unknown>;
+  current_residence_address: Record<string, unknown>;
+  vehicle_attributes: Record<string, unknown>;
+  car_photos: Record<string, unknown>;
+}
+
 interface StepCompareQuotesProps {
   onBack: () => void;
   onGetQuote: (isDraft: boolean, productId?: number) => Promise<number | null>;
-  formData: any;
+  formData: FormData;
 }
 
 interface Bank {
@@ -234,7 +253,7 @@ export default function StepCompareQuotes({
         onBack={handleBackNavigation}
         onBankSelected={handleBankSelected}
         onOtherMethodsSelected={handleOtherMethodsSelected}
-        selectedProduct={selectedProduct}
+        selectedProduct={selectedProduct as SelectedProduct}
       />
     );
   }
@@ -253,7 +272,7 @@ export default function StepCompareQuotes({
       <CheckAndPay
         onBack={handleBackNavigation}
         selectedBank={selectedBank}
-        selectedProduct={selectedProduct}
+        selectedProduct={selectedProduct as SelectedProduct}
         onPaymentComplete={handlePaymentComplete}
         onSubmitQuote={onGetQuote}
       />
